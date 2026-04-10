@@ -1,4 +1,4 @@
-import { isValidElement, useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
+import { isValidElement, useState, useRef, useEffect, useCallback, type KeyboardEvent, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -122,11 +122,14 @@ function MarkdownMessage({ content }: { content: string }) {
     <ReactMarkdown
       components={{
         pre({ children }) {
-          const child = Array.isArray(children) ? children[0] : children;
-          if (isValidElement<{ className?: string; children?: unknown }>(child)) {
-            const className = child.props.className || '';
+          const codeChild = Array.isArray(children)
+            ? children.find(child => isValidElement<{ className?: string; children?: ReactNode }>(child))
+            : children;
+
+          if (isValidElement<{ className?: string; children?: ReactNode }>(codeChild)) {
+            const className = codeChild.props.className || '';
             const match = /language-(\w+)/.exec(className);
-            const code = String(child.props.children ?? '').replace(/\n$/, '');
+            const code = String(codeChild.props.children ?? '').replace(/\n$/, '');
             return <CodeBlock language={match?.[1] || 'text'} code={code} />;
           }
 
