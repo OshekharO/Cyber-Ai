@@ -57,6 +57,12 @@ export default function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const nextId = useRef(1);
+  const inFlightRef = useRef(false);
+  const messagesRef = useRef<Message[]>([]);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -75,7 +81,8 @@ export default function App() {
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || inFlightRef.current) return;
+    inFlightRef.current = true;
 
     setError(null);
     const userMsg: Message = {
@@ -92,7 +99,7 @@ export default function App() {
     }
     setLoading(true);
 
-    const history = [...messages, userMsg];
+    const history = [...messagesRef.current, userMsg];
     const apiMessages = [
       { role: 'system', content: SYSTEM_PROMPT },
       ...history.map(m => ({ role: m.role, content: m.content })),
@@ -128,9 +135,10 @@ export default function App() {
       const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
       setError(msg);
     } finally {
+      inFlightRef.current = false;
       setLoading(false);
     }
-  }, [loading, messages]);
+  }, []);
 
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
