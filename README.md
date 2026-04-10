@@ -7,7 +7,9 @@ An AI-powered cybersecurity assistant chatbot built with React + TypeScript + Vi
 - 💬 Real-time chat with Cyber AI — a cybersecurity-focused AI assistant
 - 🎨 Dark cybersecurity-themed UI with animated elements
 - ⌨️ Auto-resizing textarea (Enter to send, Shift+Enter for new line)
-- 💡 Quick-start suggestion chips on the welcome screen
+- 🧭 Expandable topic categories with guided starter prompts
+- 📝 Rich Markdown rendering for AI replies (lists, emphasis, code blocks)
+- 📋 Per-code-block "Copy code" action
 - 🔄 Full conversation history sent with each request
 - ⚠️ Graceful error handling
 

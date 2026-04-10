@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import './App.css';
 
 interface Message {
@@ -38,20 +41,110 @@ Personality & communication style:
 
 Always respond in the same language the user writes in.`;
 
-const SUGGESTIONS = [
-  { icon: '🔐', text: 'What is a zero-day exploit?' },
-  { icon: '🛡️', text: 'How does a firewall work?' },
-  { icon: '🔑', text: 'Best practices for passwords' },
-  { icon: '🕵️', text: 'What is phishing and how to prevent it?' },
+const SUGGESTION_CATEGORIES = [
+  {
+    icon: '🏁',
+    title: 'CTF',
+    prompts: [
+      'How should I approach a beginner web CTF challenge?',
+      'Give me hints for solving basic XOR crypto challenges.',
+      'How do I build a safe CTF practice lab at home?',
+    ],
+  },
+  {
+    icon: '🌐',
+    title: 'Network Security',
+    prompts: [
+      'How does network segmentation reduce attack impact?',
+      'What are practical firewall hardening best practices?',
+      'How can I investigate suspicious traffic with Wireshark?',
+    ],
+  },
+  {
+    icon: '🛠️',
+    title: 'Penetration Testing',
+    prompts: [
+      'What is a legal and ethical pentest workflow?',
+      'How do I structure recon before active testing?',
+      'How do I write a clear penetration test report?',
+    ],
+  },
+  {
+    icon: '🔒',
+    title: 'Cryptography',
+    prompts: [
+      'What is the difference between hashing and encryption?',
+      'When should I use AES-GCM instead of CBC?',
+      'How does public key infrastructure work in practice?',
+    ],
+  },
 ];
 
 function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
+function CodeBlock({ language, code }: { language: string; code: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyCode = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1400);
+    } catch {
+      setCopied(false);
+    }
+  }, [code]);
+
+  return (
+    <div className="code-block">
+      <button className="code-copy-btn" onClick={copyCode} type="button">
+        {copied ? 'Copied' : 'Copy code'}
+      </button>
+      <SyntaxHighlighter
+        style={oneDark}
+        language={language || 'text'}
+        PreTag="div"
+        customStyle={{ margin: 0, borderRadius: 8, paddingTop: 36 }}
+      >
+        {code}
+      </SyntaxHighlighter>
+    </div>
+  );
+}
+
+function MarkdownMessage({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      components={{
+        code(props) {
+          const { className, children, ...rest } = props;
+          const inline = 'inline' in props ? Boolean((props as { inline?: boolean }).inline) : false;
+          const match = /language-(\w+)/.exec(className || '');
+          const code = String(children).replace(/\n$/, '');
+
+          if (inline) {
+            return (
+              <code className={className} {...rest}>
+                {children}
+              </code>
+            );
+          }
+
+          return <CodeBlock language={match?.[1] || 'text'} code={code} />;
+        },
+      }}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+}
+
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [activeCategory, setActiveCategory] = useState(SUGGESTION_CATEGORIES[0].title);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -146,6 +239,7 @@ export default function App() {
       sendMessage(input);
     }
   }, [input, sendMessage]);
+  const selectedCategory = SUGGESTION_CATEGORIES.find(category => category.title === activeCategory);
 
   return (
     <div className="app">
@@ -176,16 +270,34 @@ export default function App() {
                 best practices, or anything security-related.
               </p>
               <div className="suggestions">
-                {SUGGESTIONS.map(s => (
-                  <button
-                    key={s.text}
-                    className="suggestion-chip"
-                    onClick={() => sendMessage(s.text)}
-                  >
-                    <span className="chip-icon">{s.icon}</span>
-                    {s.text}
-                  </button>
-                ))}
+                <div className="suggestion-categories">
+                  {SUGGESTION_CATEGORIES.map(category => (
+                    <button
+                      key={category.title}
+                      className={`suggestion-chip ${activeCategory === category.title ? 'active' : ''}`}
+                      onClick={() => setActiveCategory(category.title)}
+                      type="button"
+                    >
+                      <span className="chip-icon">{category.icon}</span>
+                      {category.title}
+                    </button>
+                  ))}
+                </div>
+
+                {selectedCategory && (
+                  <div className="suggestion-prompts">
+                    {selectedCategory.prompts.map(prompt => (
+                      <button
+                        key={prompt}
+                        className="prompt-chip"
+                        onClick={() => sendMessage(prompt)}
+                        type="button"
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -196,7 +308,15 @@ export default function App() {
                     {msg.role === 'user' ? '👤' : '🤖'}
                   </div>
                   <div>
-                    <div className="bubble">{msg.content}</div>
+                    <div className="bubble">
+                      {msg.role === 'assistant' ? (
+                        <div className="markdown-content">
+                          <MarkdownMessage content={msg.content} />
+                        </div>
+                      ) : (
+                        msg.content
+                      )}
+                    </div>
                     <div className="message-time">{formatTime(msg.timestamp)}</div>
                   </div>
                 </div>
