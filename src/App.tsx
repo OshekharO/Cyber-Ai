@@ -108,6 +108,7 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
         style={oneDark}
         language={language || 'text'}
         PreTag="div"
+        wrapLongLines
         customStyle={{ margin: 0, borderRadius: 8, paddingTop: 36 }}
       >
         {code}
@@ -122,7 +123,7 @@ function MarkdownMessage({ content }: { content: string }) {
       components={{
         code(props) {
           const { className, children, ...rest } = props;
-          const inline = 'inline' in props ? Boolean((props as { inline?: boolean }).inline) : false;
+          const inline = !className && !String(children).includes('\n');
           const match = /language-(\w+)/.exec(className || '');
           const code = String(children).replace(/\n$/, '');
 

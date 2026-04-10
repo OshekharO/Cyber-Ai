@@ -332,6 +332,8 @@
 .code-block {
   position: relative;
   margin: 10px 0;
+  max-width: 100%;
+  overflow-x: auto;
 }
 
 .code-copy-btn {
