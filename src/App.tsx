@@ -123,10 +123,10 @@ function MarkdownMessage({ content }: { content: string }) {
       components={{
         code(props) {
           const { className, children, ...rest } = props;
-          const spansMultipleLines = props.node?.position
+          const isMultiLineCode = props.node?.position
             ? props.node.position.start.line !== props.node.position.end.line
             : String(children).includes('\n');
-          const inline = !className && !spansMultipleLines;
+          const inline = !className && !isMultiLineCode;
           const match = /language-(\w+)/.exec(className || '');
           const code = String(children).replace(/\n$/, '');
 
