@@ -10,6 +10,8 @@ An AI-powered cybersecurity assistant chatbot built with React + TypeScript + Vi
 - 🧭 Expandable topic categories with guided starter prompts
 - 📝 Rich Markdown rendering for AI replies (lists, emphasis, code blocks)
 - 📋 Per-code-block "Copy code" action
+- 📶 Live connection status (online/slow/offline) based on API outcomes
+- 🔁 Inline retry button for failed requests without retyping
 - 🔄 Full conversation history sent with each request
 - ⚠️ Graceful error handling
 

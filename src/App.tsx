@@ -11,6 +11,8 @@ interface Message {
   timestamp: Date;
 }
 
+type ConnectionStatus = 'online' | 'slow' | 'offline';
+
 const API_URL = 'https://ai-sqcn.onrender.com/api/chat';
 const SYSTEM_PROMPT = `You are Cyber AI, an elite cybersecurity assistant with decades of combined expertise \
 across offensive security, defensive operations, threat intelligence, and full-stack engineering. \
@@ -147,6 +149,8 @@ export default function App() {
   const [activeCategory, setActiveCategory] = useState(SUGGESTION_CATEGORIES[0].title);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastFailedMessage, setLastFailedMessage] = useState<string | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('online');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const nextId = useRef(1);
@@ -172,27 +176,34 @@ export default function App() {
     ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
   }, []);
 
-  const sendMessage = useCallback(async (text: string) => {
+  const sendMessage = useCallback(async (text: string, options?: { retry?: boolean }) => {
     const trimmed = text.trim();
     if (!trimmed || inFlightRef.current) return;
     inFlightRef.current = true;
 
     setError(null);
-    const userMsg: Message = {
-      id: nextId.current++,
-      role: 'user',
-      content: trimmed,
-      timestamp: new Date(),
-    };
+    const isRetry = options?.retry ?? false;
+    let history: Message[];
 
-    setMessages(prev => [...prev, userMsg]);
-    setInput('');
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
+    if (isRetry) {
+      history = [...messagesRef.current];
+    } else {
+      const userMsg: Message = {
+        id: nextId.current++,
+        role: 'user',
+        content: trimmed,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, userMsg]);
+      setInput('');
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+      history = [...messagesRef.current, userMsg];
     }
     setLoading(true);
 
-    const history = [...messagesRef.current, userMsg];
+    const startedAt = performance.now();
     const apiMessages = [
       { role: 'system', content: SYSTEM_PROMPT },
       ...history.map(m => ({ role: m.role, content: m.content })),
@@ -224,9 +235,13 @@ export default function App() {
         ...prev,
         { id: nextId.current++, role: 'assistant', content: reply, timestamp: new Date() },
       ]);
+      setLastFailedMessage(null);
+      setConnectionStatus(performance.now() - startedAt > 2500 ? 'slow' : 'online');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.';
       setError(msg);
+      setLastFailedMessage(trimmed);
+      setConnectionStatus('offline');
     } finally {
       inFlightRef.current = false;
       setLoading(false);
@@ -252,9 +267,9 @@ export default function App() {
             <div className="header-subtitle">Cybersecurity Assistant</div>
           </div>
         </div>
-        <div className="header-status">
+        <div className={`header-status ${connectionStatus}`}>
           <div className="status-dot" />
-          Online
+          {connectionStatus === 'online' ? 'Online' : connectionStatus === 'slow' ? 'Slow response' : 'Offline'}
         </div>
       </header>
 
@@ -335,7 +350,17 @@ export default function App() {
 
               {error && (
                 <div className="error-banner">
-                  ⚠️ {error}
+                  <span>⚠️ {error}</span>
+                  {lastFailedMessage && (
+                    <button
+                      className="retry-btn"
+                      onClick={() => sendMessage(lastFailedMessage, { retry: true })}
+                      disabled={loading}
+                      type="button"
+                    >
+                      Retry
+                    </button>
+                  )}
                 </div>
               )}
             </>
