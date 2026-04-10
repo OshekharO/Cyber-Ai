@@ -1,4 +1,13 @@
-import { isValidElement, useState, useRef, useEffect, useCallback, type KeyboardEvent, type ReactNode } from 'react';
+import {
+  isValidElement,
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  type KeyboardEvent,
+  type ReactNode,
+  type ReactElement,
+} from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -118,22 +127,26 @@ function CodeBlock({ language, code }: { language: string; code: string }) {
 }
 
 function MarkdownMessage({ content }: { content: string }) {
+  const isCodeElement = (
+    node: ReactNode,
+  ): node is ReactElement<{ className?: string; children?: ReactNode }> => isValidElement(node);
+
   return (
     <ReactMarkdown
       components={{
         pre({ children }) {
           const codeChild = Array.isArray(children)
-            ? children.find(child => isValidElement<{ className?: string; children?: ReactNode }>(child))
+            ? children.find(isCodeElement)
             : children;
 
-          if (isValidElement<{ className?: string; children?: ReactNode }>(codeChild)) {
-            const className = codeChild.props.className || '';
-            const match = /language-(\w+)/.exec(className);
-            const code = String(codeChild.props.children ?? '').replace(/\n$/, '');
-            return <CodeBlock language={match?.[1] || 'text'} code={code} />;
+          if (!codeChild || !isCodeElement(codeChild)) {
+            return <pre>{children}</pre>;
           }
 
-          return <pre>{children}</pre>;
+          const className = codeChild.props.className || '';
+          const match = /language-(\w+)/.exec(className);
+          const code = String(codeChild.props.children ?? '').replace(/\n$/, '');
+          return <CodeBlock language={match?.[1] || 'text'} code={code} />;
         },
         code(props) {
           const { className, children, ...rest } = props;
