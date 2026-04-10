@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
+import { isValidElement, useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -121,24 +121,24 @@ function MarkdownMessage({ content }: { content: string }) {
   return (
     <ReactMarkdown
       components={{
-        code(props) {
-          const { className, children, ...rest } = props;
-          const isMultiLineCode = props.node?.position
-            ? props.node.position.start.line !== props.node.position.end.line
-            : String(children).includes('\n');
-          const inline = !className && !isMultiLineCode;
-          const match = /language-(\w+)/.exec(className || '');
-          const code = String(children).replace(/\n$/, '');
-
-          if (inline) {
-            return (
-              <code className={className} {...rest}>
-                {children}
-              </code>
-            );
+        pre({ children }) {
+          const child = Array.isArray(children) ? children[0] : children;
+          if (isValidElement<{ className?: string; children?: unknown }>(child)) {
+            const className = child.props.className || '';
+            const match = /language-(\w+)/.exec(className);
+            const code = String(child.props.children ?? '').replace(/\n$/, '');
+            return <CodeBlock language={match?.[1] || 'text'} code={code} />;
           }
 
-          return <CodeBlock language={match?.[1] || 'text'} code={code} />;
+          return <pre>{children}</pre>;
+        },
+        code(props) {
+          const { className, children, ...rest } = props;
+          return (
+            <code className={className} {...rest}>
+              {children}
+            </code>
+          );
         },
       }}
     >
