@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { MessageBubble, StreamingBubble } from './MessageBubble.tsx';
 import { TypingIndicator } from './TypingIndicator.tsx';
 import { ErrorBanner } from './ErrorBanner.tsx';
@@ -35,14 +35,15 @@ export function MessageList({
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
 
-  // Scroll to bottom when new messages / streaming
+  // Scroll to bottom when new messages arrive (smooth) or when streaming
+  // content updates (instant — avoids scroll-animation pile-up on every token).
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length, loading]);
 
   useEffect(() => {
     if (streamingContent) {
-      endRef.current?.scrollIntoView({ behavior: 'smooth' });
+      endRef.current?.scrollIntoView({ behavior: 'instant' });
     }
   }, [streamingContent]);
 
@@ -64,9 +65,13 @@ export function MessageList({
   }, []);
 
   // Filter messages by search query
-  const visibleMessages = searchQuery.trim()
-    ? messages.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
-    : messages;
+  const visibleMessages = useMemo<Message[]>(
+    () =>
+      searchQuery.trim()
+        ? messages.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
+        : messages,
+    [messages, searchQuery],
+  );
 
   return (
     <div

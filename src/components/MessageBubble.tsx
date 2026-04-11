@@ -1,10 +1,63 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Components } from 'react-markdown';
 import type { Message } from '../hooks/useChat.ts';
+
+// Register only the languages needed for a cybersecurity context.
+// Using PrismLight + explicit registration keeps the bundle ~80 % smaller
+// compared to the default Prism build which ships all 200+ languages.
+import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
+import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
+import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
+import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
+import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
+import yaml from 'react-syntax-highlighter/dist/esm/languages/prism/yaml';
+import sql from 'react-syntax-highlighter/dist/esm/languages/prism/sql';
+import http from 'react-syntax-highlighter/dist/esm/languages/prism/http';
+import markup from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
+import css from 'react-syntax-highlighter/dist/esm/languages/prism/css';
+import cpp from 'react-syntax-highlighter/dist/esm/languages/prism/cpp';
+import c from 'react-syntax-highlighter/dist/esm/languages/prism/c';
+import powershell from 'react-syntax-highlighter/dist/esm/languages/prism/powershell';
+import ruby from 'react-syntax-highlighter/dist/esm/languages/prism/ruby';
+import java from 'react-syntax-highlighter/dist/esm/languages/prism/java';
+import go from 'react-syntax-highlighter/dist/esm/languages/prism/go';
+import docker from 'react-syntax-highlighter/dist/esm/languages/prism/docker';
+import diff from 'react-syntax-highlighter/dist/esm/languages/prism/diff';
+import php from 'react-syntax-highlighter/dist/esm/languages/prism/php';
+
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('shell', bash);
+SyntaxHighlighter.registerLanguage('sh', bash);
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('py', python);
+SyntaxHighlighter.registerLanguage('javascript', javascript);
+SyntaxHighlighter.registerLanguage('js', javascript);
+SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('ts', typescript);
+SyntaxHighlighter.registerLanguage('json', json);
+SyntaxHighlighter.registerLanguage('yaml', yaml);
+SyntaxHighlighter.registerLanguage('yml', yaml);
+SyntaxHighlighter.registerLanguage('sql', sql);
+SyntaxHighlighter.registerLanguage('http', http);
+SyntaxHighlighter.registerLanguage('html', markup);
+SyntaxHighlighter.registerLanguage('xml', markup);
+SyntaxHighlighter.registerLanguage('css', css);
+SyntaxHighlighter.registerLanguage('cpp', cpp);
+SyntaxHighlighter.registerLanguage('c', c);
+SyntaxHighlighter.registerLanguage('powershell', powershell);
+SyntaxHighlighter.registerLanguage('ps1', powershell);
+SyntaxHighlighter.registerLanguage('ruby', ruby);
+SyntaxHighlighter.registerLanguage('rb', ruby);
+SyntaxHighlighter.registerLanguage('java', java);
+SyntaxHighlighter.registerLanguage('go', go);
+SyntaxHighlighter.registerLanguage('docker', docker);
+SyntaxHighlighter.registerLanguage('dockerfile', docker);
+SyntaxHighlighter.registerLanguage('diff', diff);
+SyntaxHighlighter.registerLanguage('php', php);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -156,9 +209,9 @@ interface MessageBubbleProps {
   onRegenerate: () => void;
 }
 
-export function MessageBubble({ message, isLast, theme, onFeedback, onRegenerate }: MessageBubbleProps) {
+function MessageBubbleInner({ message, isLast, theme, onFeedback, onRegenerate }: MessageBubbleProps) {
   const isUser = message.role === 'user';
-  const components = makeComponents(theme);
+  const components = useMemo(() => makeComponents(theme), [theme]);
 
   return (
     <div className={`message ${isUser ? 'user' : 'ai'}`}>
@@ -200,6 +253,10 @@ export function MessageBubble({ message, isLast, theme, onFeedback, onRegenerate
   );
 }
 
+// Wrap with memo so that a MessageBubble only re-renders when its own props
+// change, not on every streaming token update.
+export const MessageBubble = memo(MessageBubbleInner);
+
 // ── Streaming bubble (partial content during streaming) ───────────────────────
 
 interface StreamingBubbleProps {
@@ -208,7 +265,7 @@ interface StreamingBubbleProps {
 }
 
 export function StreamingBubble({ content, theme }: StreamingBubbleProps) {
-  const components = makeComponents(theme);
+  const components = useMemo(() => makeComponents(theme), [theme]);
 
   return (
     <div className="message ai">
