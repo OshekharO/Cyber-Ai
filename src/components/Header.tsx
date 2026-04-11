@@ -34,12 +34,10 @@ export function Header({
         >
           ☰
         </button>
+
         <div className="header-brand">
           <div className="header-logo" aria-hidden="true">🛡️</div>
-          <div>
-            <div className="header-title">Cyber AI</div>
-            <div className="header-subtitle">Cybersecurity Assistant</div>
-          </div>
+          <span className="header-title">Cyber AI</span>
         </div>
       </div>
 
@@ -75,17 +73,18 @@ export function Header({
             </button>
           </>
         )}
+
         <button
-          className="header-icon-btn theme-toggle"
+          className="header-icon-btn"
           onClick={onToggleTheme}
           aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
+
         <div className="header-status" aria-live="polite" aria-label={loading ? 'Processing' : 'Online'}>
           <div className={`status-dot${loading ? ' status-dot--busy' : ''}`} aria-hidden="true" />
-          <span>{loading ? 'Thinking…' : 'Online'}</span>
         </div>
       </div>
     </header>

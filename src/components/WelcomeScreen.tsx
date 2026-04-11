@@ -54,13 +54,6 @@ const CATEGORIES: SuggestionCategory[] = [
   },
 ];
 
-const TERMINAL_LINES = [
-  '> Cyber AI v2.0 initializing…',
-  '> Threat intelligence engine: READY',
-  '> Security knowledge base: LOADED',
-  '> How can I assist you today?',
-];
-
 interface WelcomeScreenProps {
   onSend: (text: string) => void;
 }
@@ -72,46 +65,48 @@ export function WelcomeScreen({ onSend }: WelcomeScreenProps) {
 
   return (
     <div className="welcome">
-      {/* Animated terminal intro */}
-      <div className="terminal-intro" aria-live="polite">
-        {TERMINAL_LINES.map((line, i) => (
-          <div
-            key={line}
-            className={`terminal-line terminal-line--${i}`}
-            aria-hidden={i < TERMINAL_LINES.length - 1}
-          >
-            {line}{i === TERMINAL_LINES.length - 1 && <span className="terminal-cursor" aria-hidden="true">█</span>}
-          </div>
-        ))}
+      {/* Hero section */}
+      <div className="welcome-hero">
+        <div className="welcome-logo" aria-hidden="true">🛡️</div>
+        <h1 className="welcome-title">Cyber AI</h1>
+        <p className="welcome-subtitle">Your AI-powered cybersecurity assistant</p>
+        <div className="terminal-badge" aria-label="System ready">
+          <span className="terminal-dot" aria-hidden="true" />
+          <span>System Ready</span>
+        </div>
       </div>
 
       {/* Category tabs */}
-      <div className="suggestion-tabs" role="tablist" aria-label="Suggestion categories">
-        {CATEGORIES.map(cat => (
-          <button
-            key={cat.label}
-            role="tab"
-            aria-selected={cat.label === activeCategory}
-            className={`suggestion-tab${cat.label === activeCategory ? ' suggestion-tab--active' : ''}`}
-            onClick={() => setActiveCategory(cat.label)}
-          >
-            <span aria-hidden="true">{cat.icon}</span> {cat.label}
-          </button>
-        ))}
-      </div>
+      <div className="suggestion-section">
+        <p className="suggestion-label">Try asking about…</p>
+        <div className="suggestion-tabs" role="tablist" aria-label="Suggestion categories">
+          {CATEGORIES.map(cat => (
+            <button
+              key={cat.label}
+              role="tab"
+              aria-selected={cat.label === activeCategory}
+              className={`suggestion-tab${cat.label === activeCategory ? ' suggestion-tab--active' : ''}`}
+              onClick={() => setActiveCategory(cat.label)}
+            >
+              <span aria-hidden="true">{cat.icon}</span>
+              <span>{cat.label}</span>
+            </button>
+          ))}
+        </div>
 
-      {/* Suggestion chips */}
-      <div className="suggestions" role="tabpanel" aria-label={`${active.label} suggestions`}>
-        {active.items.map(s => (
-          <button
-            key={s.text}
-            className="suggestion-chip"
-            onClick={() => onSend(s.text)}
-          >
-            <span className="chip-icon" aria-hidden="true">{s.icon}</span>
-            {s.text}
-          </button>
-        ))}
+        {/* Suggestion chips */}
+        <div className="suggestions" role="tabpanel" aria-label={`${active.label} suggestions`}>
+          {active.items.map(s => (
+            <button
+              key={s.text}
+              className="suggestion-chip"
+              onClick={() => onSend(s.text)}
+            >
+              <span className="chip-icon" aria-hidden="true">{s.icon}</span>
+              <span className="chip-text">{s.text}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

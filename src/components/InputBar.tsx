@@ -1,7 +1,6 @@
 import { useRef, useCallback, useEffect, useState, type KeyboardEvent } from 'react';
 import { CommandPalette } from './CommandPalette.tsx';
 
-const MAX_FILE_SIZE_BYTES = 100_000; // 100 KB
 const PASTE_THRESHOLD = 1_000; // chars
 
 interface InputBarProps {
@@ -15,7 +14,6 @@ interface InputBarProps {
 
 export function InputBar({ input, loading, onChange, onSend, onStop, onClear }: InputBarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [pasteConfirm, setPasteConfirm] = useState<{ text: string } | null>(null);
 
   // Auto-resize textarea
@@ -64,21 +62,6 @@ export function InputBar({ input, loading, onChange, onSend, onStop, onClear }: 
     }
   }, []);
 
-  // File upload
-  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_FILE_SIZE_BYTES) {
-      alert(`File too large (max ${MAX_FILE_SIZE_BYTES / 1000} KB).`);
-      return;
-    }
-    const text = await file.text();
-    const prefix = `[Attached file: ${file.name}]\n\`\`\`\n${text}\n\`\`\`\n\n`;
-    onChange(prefix + input);
-    // Reset input so same file can be re-selected
-    e.target.value = '';
-  }, [input, onChange]);
-
   const confirmPaste = useCallback(() => {
     if (!pasteConfirm) return;
     onChange(input + pasteConfirm.text);
@@ -121,25 +104,6 @@ export function InputBar({ input, loading, onChange, onSend, onStop, onClear }: 
       )}
 
       <div className="input-row">
-        {/* File upload */}
-        <button
-          className="attach-btn"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={loading}
-          aria-label="Attach a file"
-          title="Attach file (text files, max 100 KB)"
-        >
-          📎
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".txt,.log,.conf,.json,.yaml,.yml,.py,.js,.ts,.sh,.md,.csv,.xml,.html,.css"
-          style={{ display: 'none' }}
-          onChange={handleFileChange}
-          aria-hidden="true"
-        />
-
         <div className={`input-wrapper${isOverLimit ? ' input-wrapper--over-limit' : ''}`}>
           <textarea
             ref={textareaRef}
@@ -182,9 +146,11 @@ export function InputBar({ input, loading, onChange, onSend, onStop, onClear }: 
       {/* Footer row */}
       <div className="input-footer">
         <span className="input-hint">↵ Send · Shift+↵ New line · / Commands</span>
-        <span className={`char-count${isOverLimit ? ' char-count--over' : ''}`} aria-live="polite">
-          {charCount.toLocaleString()} chars
-        </span>
+        {charCount > 0 && (
+          <span className={`char-count${isOverLimit ? ' char-count--over' : ''}`} aria-live="polite">
+            {charCount.toLocaleString()} chars
+          </span>
+        )}
       </div>
     </div>
   );
