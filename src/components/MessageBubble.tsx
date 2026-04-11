@@ -152,24 +152,13 @@ interface MessageBubbleProps {
   message: Message;
   isLast: boolean;
   theme: 'dark' | 'light';
-  searchQuery: string;
   onFeedback: (id: number, fb: 'up' | 'down') => void;
   onRegenerate: () => void;
 }
 
-function highlightText(text: string, query: string): string {
-  if (!query.trim()) return text;
-  return text; // Actual highlight is done via CSS mark; we return plain text for non-markdown
-}
-
-export function MessageBubble({ message, isLast, theme, searchQuery, onFeedback, onRegenerate }: MessageBubbleProps) {
+export function MessageBubble({ message, isLast, theme, onFeedback, onRegenerate }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const components = makeComponents(theme);
-
-  // Highlight search matches in user messages (plain text)
-  const displayContent = isUser && searchQuery
-    ? highlightText(message.content, searchQuery)
-    : message.content;
 
   return (
     <div className={`message ${isUser ? 'user' : 'ai'}`}>
@@ -180,7 +169,7 @@ export function MessageBubble({ message, isLast, theme, searchQuery, onFeedback,
       <div className="message-body">
         <div className={`bubble${isUser ? ' bubble--user' : ' bubble--ai'}`}>
           {isUser ? (
-            <div className="user-text">{displayContent}</div>
+            <div className="user-text">{message.content}</div>
           ) : (
             <Markdown
               remarkPlugins={[remarkGfm]}

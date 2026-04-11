@@ -283,9 +283,12 @@ export function useChat() {
 
   const regenerate = useCallback(async () => {
     if (loading) return;
-    // Find the last user message index
-    const lastUserIdx = messages.map((m, i) => m.role === 'user' ? i : -1).filter(i => i >= 0).pop();
-    if (lastUserIdx === undefined) return;
+    // Find the last user message index using a reverse loop (O(n) without intermediate arrays)
+    let lastUserIdx = -1;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') { lastUserIdx = i; break; }
+    }
+    if (lastUserIdx === -1) return;
     const lastUserMsg = messages[lastUserIdx];
     // Drop the last user message and everything after, then re-send
     updateMessages(msgs => msgs.slice(0, lastUserIdx));

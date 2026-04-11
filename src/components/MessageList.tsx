@@ -85,7 +85,6 @@ export function MessageList({
             message={msg}
             isLast={isLast}
             theme={theme}
-            searchQuery={searchQuery}
             onFeedback={onFeedback}
             onRegenerate={onRegenerate}
           />

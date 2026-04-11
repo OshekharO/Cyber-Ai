@@ -34,6 +34,8 @@ function classifyError(err: unknown, status?: number): ChatError {
   return { message: msg, kind: 'unknown' };
 }
 
+const SSE_DONE_MARKER = 'data: [DONE]';
+
 /**
  * Sends messages to the API. Calls `onToken` for each streamed chunk.
  * Falls back to a single-chunk call if the API returns JSON (non-streaming).
@@ -81,7 +83,7 @@ export async function streamChat(
 
       for (const line of lines) {
         const trimmed = line.trim();
-        if (!trimmed || trimmed === 'data: [DONE]') continue;
+        if (!trimmed || trimmed === SSE_DONE_MARKER) continue;
         if (trimmed.startsWith('data: ')) {
           try {
             const json = JSON.parse(trimmed.slice(6)) as { choices?: { delta?: { content?: string } }[] };

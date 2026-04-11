@@ -1,7 +1,7 @@
 import { useRef, useCallback, useEffect, useState, type KeyboardEvent } from 'react';
 import { CommandPalette } from './CommandPalette.tsx';
 
-const MAX_FILE_SIZE = 100_000; // 100 KB
+const MAX_FILE_SIZE_BYTES = 100_000; // 100 KB
 const PASTE_THRESHOLD = 1_000; // chars
 
 interface InputBarProps {
@@ -68,8 +68,8 @@ export function InputBar({ input, loading, onChange, onSend, onStop, onClear }: 
   const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > MAX_FILE_SIZE) {
-      alert(`File too large (max ${MAX_FILE_SIZE / 1000} KB).`);
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      alert(`File too large (max ${MAX_FILE_SIZE_BYTES / 1000} KB).`);
       return;
     }
     const text = await file.text();
