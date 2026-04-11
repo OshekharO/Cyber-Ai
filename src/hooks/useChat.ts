@@ -96,15 +96,22 @@ function computeMaxId(sessions: Session[]): number {
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useChat() {
+  // Compute initial sessions + activeSessionId together so they always agree.
+  // Using a ref ensures the computation runs exactly once even in Strict Mode.
+  const initRef = useRef<{ sessions: Session[]; activeSessionId: string } | null>(null);
+  if (initRef.current === null) {
+    const stored = loadSessions();
+    if (stored.length > 0) {
+      initRef.current = { sessions: stored, activeSessionId: stored[0].id };
+    } else {
+      const fresh = createSession();
+      initRef.current = { sessions: [fresh], activeSessionId: fresh.id };
+    }
+  }
+
   // -- State
-  const [sessions, setSessions] = useState<Session[]>(() => {
-    const stored = loadSessions();
-    return stored.length > 0 ? stored : [createSession()];
-  });
-  const [activeSessionId, setActiveSessionId] = useState<string>(() => {
-    const stored = loadSessions();
-    return stored.length > 0 ? stored[0].id : '';
-  });
+  const [sessions, setSessions] = useState<Session[]>(initRef.current.sessions);
+  const [activeSessionId, setActiveSessionId] = useState<string>(initRef.current.activeSessionId);
   const [loading, setLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState<ChatError | null>(null);
@@ -115,17 +122,8 @@ export function useChat() {
 
   // -- Refs
   const abortRef = useRef<AbortController | null>(null);
-  const nextId = useRef(1);
-
-  // On mount, sync nextId from stored data
-  useEffect(() => {
-    const stored = loadSessions();
-    nextId.current = computeMaxId(stored) + 1;
-    // Ensure activeSessionId is valid
-    if (stored.length > 0) {
-      setActiveSessionId(stored[0].id);
-    }
-  }, []);
+  // Seed nextId from the initial sessions data so IDs never collide with persisted ones
+  const nextId = useRef(computeMaxId(initRef.current.sessions) + 1);
 
   // Persist sessions whenever they change
   useEffect(() => {
@@ -319,13 +317,14 @@ export function useChat() {
   const exportMarkdown = useCallback(() => {
     if (messages.length === 0) return;
     const session = activeSession;
-    const lines: string[] = [`# ${session.name}`, `*Exported from Cyber AI — ${new Date().toLocaleString()}*`, ''];
+    const lines: string[] = [`# ${session.name}`, `*Exported from Cyber AI \u2014 ${new Date().toLocaleString()}*`, ''];
     for (const m of messages) {
       const label = m.role === 'user' ? '**You**' : '**Cyber AI**';
       const time = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      lines.push(`${label} — ${time}`, '', m.content, '', '---', '');
+      lines.push(`${label} \u2014 ${time}`, '', m.content, '', '---', '');
     }
-    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' });
+    // UTF-8 BOM ensures editors and OS file associations decode the file correctly
+    const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
