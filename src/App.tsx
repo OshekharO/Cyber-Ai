@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useChat } from './hooks/useChat.ts';
 import { Header } from './components/Header.tsx';
 import { Sidebar } from './components/Sidebar.tsx';
@@ -12,7 +12,10 @@ export default function App() {
   const chat = useChat();
   const [input, setInput] = useState('');
 
-  const lastUserMessage = [...chat.messages].reverse().find(m => m.role === 'user');
+  const lastUserMessage = useMemo(
+    () => [...chat.messages].reverse().find(m => m.role === 'user'),
+    [chat.messages],
+  );
 
   const handleSend = useCallback((text: string) => {
     chat.sendMessage(text);
@@ -24,11 +27,15 @@ export default function App() {
     }
   }, [chat, lastUserMessage]);
 
-  const searchMatchCount = chat.searchQuery.trim()
-    ? chat.messages.filter(m =>
-        m.content.toLowerCase().includes(chat.searchQuery.toLowerCase())
-      ).length
-    : 0;
+  const searchMatchCount = useMemo(
+    () =>
+      chat.searchQuery.trim()
+        ? chat.messages.filter(m =>
+            m.content.toLowerCase().includes(chat.searchQuery.toLowerCase())
+          ).length
+        : 0,
+    [chat.messages, chat.searchQuery],
+  );
 
   return (
     <div className={`app${chat.sidebarOpen ? ' app--sidebar-open' : ''}`}>
