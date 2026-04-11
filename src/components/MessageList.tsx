@@ -43,7 +43,7 @@ export function MessageList({
 
   useEffect(() => {
     if (streamingContent) {
-      endRef.current?.scrollIntoView({ behavior: 'instant' });
+      endRef.current?.scrollIntoView({ behavior: 'auto' });
     }
   }, [streamingContent]);
 

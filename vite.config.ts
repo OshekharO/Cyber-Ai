@@ -10,19 +10,24 @@ export default defineConfig({
         // Split large third-party libraries into separate cacheable chunks so
         // the browser can load them in parallel and cache them across deploys.
         manualChunks(id: string) {
-          if (id.includes('node_modules/react-syntax-highlighter')) {
+          const normalizedId = id.replace(/\\/g, '/');
+
+          if (normalizedId.includes('node_modules/react-syntax-highlighter')) {
             return 'vendor-syntax';
           }
           if (
-            id.includes('node_modules/react-markdown') ||
-            id.includes('node_modules/remark') ||
-            id.includes('node_modules/micromark') ||
-            id.includes('node_modules/mdast') ||
-            id.includes('node_modules/unified')
+            normalizedId.includes('node_modules/react-markdown') ||
+            normalizedId.includes('node_modules/remark') ||
+            normalizedId.includes('node_modules/micromark') ||
+            normalizedId.includes('node_modules/mdast') ||
+            normalizedId.includes('node_modules/unified')
           ) {
             return 'vendor-markdown';
           }
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+          if (
+            normalizedId.includes('node_modules/react/') ||
+            normalizedId.includes('node_modules/react-dom/')
+          ) {
             return 'vendor-react';
           }
         },
