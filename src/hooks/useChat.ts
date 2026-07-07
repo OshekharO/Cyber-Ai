@@ -61,9 +61,9 @@ function createSession(name = 'New Chat'): Session {
   return { id: crypto.randomUUID(), name, messages: [], createdAt: now, updatedAt: now };
 }
 
-function loadSessions(): Session[] {
+function loadSessions(storageKey: string): Session[] {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return [];
     return JSON.parse(raw) as Session[];
   } catch {
@@ -71,9 +71,9 @@ function loadSessions(): Session[] {
   }
 }
 
-function saveSessions(sessions: Session[]): void {
+function saveSessions(storageKey: string, sessions: Session[]): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+    localStorage.setItem(storageKey, JSON.stringify(sessions));
   } catch {
     // Storage quota exceeded — silently ignore
   }
@@ -95,12 +95,14 @@ function computeMaxId(sessions: Session[]): number {
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useChat() {
+export function useChat(storageScope = 'global') {
+  const storageKey = `${STORAGE_KEY}:${storageScope}`;
+
   // Compute initial sessions + activeSessionId together so they always agree.
   // Using a ref ensures the computation runs exactly once even in Strict Mode.
   const initRef = useRef<{ sessions: Session[]; activeSessionId: string } | null>(null);
   if (initRef.current === null) {
-    const stored = loadSessions();
+    const stored = loadSessions(storageKey);
     if (stored.length > 0) {
       initRef.current = { sessions: stored, activeSessionId: stored[0].id };
     } else {
@@ -127,8 +129,8 @@ export function useChat() {
 
   // Persist sessions whenever they change
   useEffect(() => {
-    saveSessions(sessions);
-  }, [sessions]);
+    saveSessions(storageKey, sessions);
+  }, [sessions, storageKey]);
 
   // Apply theme to <html> element
   useEffect(() => {

@@ -39,6 +39,21 @@ npm run dev
 
 Open [http://localhost:5173](http://localhost:5173) in your browser.
 
+## Supabase Setup
+
+This project now uses Supabase for login, registration, and the admin dashboard.
+
+Set these environment variables locally and in Vercel:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+Database schema and RLS notes are in [supabase/schema.sql](supabase/schema.sql).
+
+The Vercel rewrite excludes `/api/*`, so the admin users function at [api/admin/users.ts](api/admin/users.ts) stays reachable.
+
 ## Build
 
 ```bash

@@ -4,11 +4,15 @@ interface HeaderProps {
   loading: boolean;
   hasMessages: boolean;
   sidebarOpen: boolean;
+  userLabel?: string;
+  isAdmin?: boolean;
   onToggleTheme: () => void;
   onToggleSearch: () => void;
   onToggleSidebar: () => void;
   onExport: () => void;
   onClear: () => void;
+  onOpenAdmin?: () => void;
+  onSignOut?: () => void;
 }
 
 export function Header({
@@ -17,11 +21,15 @@ export function Header({
   loading,
   hasMessages,
   sidebarOpen,
+  userLabel,
+  isAdmin,
   onToggleTheme,
   onToggleSearch,
   onToggleSidebar,
   onExport,
   onClear,
+  onOpenAdmin,
+  onSignOut,
 }: HeaderProps) {
   return (
     <header className="header" role="banner">
@@ -42,6 +50,32 @@ export function Header({
       </div>
 
       <div className="header-actions">
+        {(userLabel || isAdmin || onOpenAdmin || onSignOut) && (
+          <div className="header-account">
+            {userLabel && <span className="header-user-chip" title={userLabel}>{userLabel}</span>}
+            {isAdmin && onOpenAdmin && (
+              <button
+                className="header-account-btn"
+                onClick={onOpenAdmin}
+                aria-label="Open admin dashboard"
+                title="Admin dashboard"
+              >
+                Admin
+              </button>
+            )}
+            {onSignOut && (
+              <button
+                className="header-account-btn header-account-btn--ghost"
+                onClick={onSignOut}
+                aria-label="Sign out"
+                title="Sign out"
+              >
+                Sign out
+              </button>
+            )}
+          </div>
+        )}
+
         {hasMessages && (
           <>
             <button

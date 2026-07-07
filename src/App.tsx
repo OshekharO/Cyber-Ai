@@ -1,105 +1,85 @@
-import { useState, useCallback, useMemo } from 'react';
-import { useChat } from './hooks/useChat.ts';
-import { Header } from './components/Header.tsx';
-import { Sidebar } from './components/Sidebar.tsx';
-import { WelcomeScreen } from './components/WelcomeScreen.tsx';
-import { MessageList } from './components/MessageList.tsx';
-import { InputBar } from './components/InputBar.tsx';
-import { MessageSearch } from './components/MessageSearch.tsx';
+import { useEffect, useState } from 'react';
+import { AuthScreen } from './components/AuthScreen.tsx';
+import { ChatWorkspace } from './components/ChatWorkspace.tsx';
+import { AdminDashboard } from './components/AdminDashboard.tsx';
+import { useAuth } from './hooks/useAuth.ts';
+import { supabaseConfigError } from './lib/supabase.ts';
 import './App.css';
 
 export default function App() {
-  const chat = useChat();
-  const [input, setInput] = useState('');
+  const auth = useAuth();
+  const [view, setView] = useState<'chat' | 'admin'>(() => window.location.hash === '#admin' ? 'admin' : 'chat');
 
-  const lastUserMessage = useMemo(
-    () => [...chat.messages].reverse().find(m => m.role === 'user'),
-    [chat.messages],
-  );
+  useEffect(() => {
+    const syncView = () => setView(window.location.hash === '#admin' ? 'admin' : 'chat');
+    window.addEventListener('hashchange', syncView);
+    return () => window.removeEventListener('hashchange', syncView);
+  }, []);
 
-  const handleSend = useCallback((text: string) => {
-    chat.sendMessage(text);
-  }, [chat]);
-
-  const handleRetry = useCallback(() => {
-    if (lastUserMessage) {
-      chat.sendMessage(lastUserMessage.content);
+  useEffect(() => {
+    if (!auth.isAdmin && view === 'admin') {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      setView('chat');
     }
-  }, [chat, lastUserMessage]);
+  }, [auth.isAdmin, view]);
 
-  const searchMatchCount = useMemo(
-    () =>
-      chat.searchQuery.trim()
-        ? chat.messages.filter(m =>
-            m.content.toLowerCase().includes(chat.searchQuery.toLowerCase())
-          ).length
-        : 0,
-    [chat.messages, chat.searchQuery],
-  );
+  const openAdmin = () => {
+    window.location.hash = 'admin';
+    setView('admin');
+  };
+
+  const backToChat = () => {
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    setView('chat');
+  };
+
+  const signOut = async () => {
+    await auth.signOut();
+    backToChat();
+  };
+
+  if (auth.loading) {
+    return (
+      <main className="screen-shell screen-shell--loading">
+        <div className="loading-card">
+          <div className="loading-orb" aria-hidden="true" />
+          <p>Loading secure workspace...</p>
+        </div>
+      </main>
+    );
+  }
+
+  if (!auth.session) {
+    return (
+      <AuthScreen
+        loading={auth.loading}
+        error={auth.error}
+        configError={auth.error === supabaseConfigError ? auth.error : null}
+        onSignIn={auth.signIn}
+        onSignUp={auth.signUp}
+      />
+    );
+  }
+
+  if (view === 'admin' && auth.isAdmin && auth.profile) {
+    return (
+      <AdminDashboard
+        session={auth.session}
+        profile={auth.profile}
+        onBackToChat={backToChat}
+        onSignOut={signOut}
+        notice={auth.error}
+      />
+    );
+  }
 
   return (
-    <div className={`app${chat.sidebarOpen ? ' app--sidebar-open' : ''}`}>
-      <Header
-        theme={chat.theme}
-        searchOpen={chat.searchOpen}
-        loading={chat.loading}
-        hasMessages={chat.messages.length > 0}
-        sidebarOpen={chat.sidebarOpen}
-        onToggleTheme={chat.toggleTheme}
-        onToggleSearch={chat.toggleSearch}
-        onToggleSidebar={chat.toggleSidebar}
-        onExport={chat.exportMarkdown}
-        onClear={chat.clearMessages}
-      />
-
-      {chat.searchOpen && (
-        <MessageSearch
-          query={chat.searchQuery}
-          matchCount={searchMatchCount}
-          onChange={chat.setSearchQuery}
-          onClose={chat.toggleSearch}
-        />
-      )}
-
-      <div className="app-body">
-        <Sidebar
-          sessions={chat.sessions}
-          activeSessionId={chat.activeSessionId}
-          open={chat.sidebarOpen}
-          onNew={chat.newSession}
-          onSwitch={chat.switchSession}
-          onDelete={chat.deleteSession}
-          onClose={() => chat.setSidebarOpen(false)}
-        />
-
-        <div className="chat-container">
-          {chat.messages.length === 0 && !chat.loading ? (
-            <WelcomeScreen onSend={handleSend} />
-          ) : (
-            <MessageList
-              messages={chat.messages}
-              loading={chat.loading}
-              streamingContent={chat.streamingContent}
-              error={chat.error}
-              theme={chat.theme}
-              searchQuery={chat.searchQuery}
-              onFeedback={chat.setFeedback}
-              onRegenerate={chat.regenerate}
-              onRetry={handleRetry}
-              onDismissError={() => chat.setError(null)}
-            />
-          )}
-
-          <InputBar
-            input={input}
-            loading={chat.loading}
-            onChange={setInput}
-            onSend={handleSend}
-            onStop={chat.stopGenerating}
-            onClear={chat.clearMessages}
-          />
-        </div>
-      </div>
-    </div>
+    <ChatWorkspace
+      userId={auth.user?.id ?? 'guest'}
+      userLabel={auth.profile?.full_name ?? auth.user?.email ?? 'Account'}
+      isAdmin={auth.isAdmin}
+      onOpenAdmin={openAdmin}
+      onSignOut={signOut}
+    />
   );
 }
