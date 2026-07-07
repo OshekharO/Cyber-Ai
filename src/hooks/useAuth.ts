@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   buildSupabaseUrl,
   createSupabaseHeaders,
+  getAuthRedirectUrl,
   isSupabaseConfigured,
   parseJson,
   readStoredSession,
@@ -61,7 +62,10 @@ async function signUpWithPassword(email: string, password: string, fullName: str
     body: JSON.stringify({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: {
+        data: { full_name: fullName },
+        emailRedirectTo: getAuthRedirectUrl(),
+      },
     }),
   });
 }
@@ -106,7 +110,8 @@ async function readProfile(accessToken: string, userId: string): Promise<Profile
 async function createProfile(accessToken: string, user: SupabaseAuthUser): Promise<Profile> {
   const fullName = (user.user_metadata.full_name as string | undefined)
     ?? (user.user_metadata.name as string | undefined)
-    ?? user.email;
+    ?? user.email?.split('@')[0]
+    ?? 'Account';
 
   const response = await fetch(buildSupabaseUrl('rest/v1/profiles'), {
     method: 'POST',
@@ -142,7 +147,9 @@ async function syncProfile(accessToken: string, user: SupabaseAuthUser): Promise
 
   const nextFullName = (user.user_metadata.full_name as string | undefined)
     ?? (user.user_metadata.name as string | undefined)
-    ?? existing.full_name;
+    ?? existing.full_name
+    ?? user.email?.split('@')[0]
+    ?? 'Account';
 
   if (existing.email === user.email && existing.full_name === nextFullName) {
     return existing;

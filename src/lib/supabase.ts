@@ -34,6 +34,14 @@ export function buildSupabaseUrl(path: string, query?: Record<string, string | n
   return url;
 }
 
+export function getAuthRedirectUrl() {
+  if (import.meta.env.DEV && typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+
+  return import.meta.env.VITE_SITE_URL?.trim() || 'https://cyber-ai-henna.vercel.app';
+}
+
 export function createSupabaseHeaders(token?: string) {
   return {
     apikey: supabaseAnonKey,

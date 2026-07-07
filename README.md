@@ -47,6 +47,7 @@ Set these environment variables locally and in Vercel:
 
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
+- `VITE_SITE_URL`  (optional, defaults to `https://cyber-ai-henna.vercel.app` in production and your current origin in development)
 - `SUPABASE_URL`
 - `SUPABASE_SERVICE_ROLE_KEY`
 

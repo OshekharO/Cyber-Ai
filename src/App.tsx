@@ -76,7 +76,7 @@ export default function App() {
   return (
     <ChatWorkspace
       userId={auth.user?.id ?? 'guest'}
-      userLabel={auth.profile?.full_name ?? auth.user?.email ?? 'Account'}
+      userLabel={auth.profile?.full_name ?? (auth.user?.user_metadata.full_name as string | undefined) ?? (auth.user?.user_metadata.name as string | undefined) ?? auth.user?.email?.split('@')[0] ?? 'Account'}
       isAdmin={auth.isAdmin}
       onOpenAdmin={openAdmin}
       onSignOut={signOut}
