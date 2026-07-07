@@ -174,6 +174,17 @@ export default async function handler(req: any, res: any) {
     res.setHeader('Allow', 'GET, PATCH, DELETE');
     json(res, 405, { error: 'Method not allowed.' });
   } catch (err) {
-    json(res, 401, { error: err instanceof Error ? err.message : 'Unauthorized.' });
+    const message = err instanceof Error ? err.message : 'Unauthorized.';
+    const status = message.includes('Supabase server environment variables are missing')
+      ? 500
+      : message.includes('Admin access required')
+        ? 403
+        : message.includes('Missing bearer token')
+          ? 401
+          : message.includes('Unable to validate the current session')
+            ? 401
+            : 500;
+
+    json(res, status, { error: message });
   }
 }
