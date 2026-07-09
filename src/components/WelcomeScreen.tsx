@@ -16,7 +16,7 @@ import {
   FiFileText,
   FiShield,
   FiList,
-  FiScale,
+  FiBook,
   FiCloud
 } from 'react-icons/fi';
 
@@ -61,7 +61,7 @@ const ITEM_ICONS: ItemIconMap = {
   'OSINT techniques for CTF competitions': FiUser,
   'NIST Cybersecurity Framework overview': FiShield,
   'OWASP Top 10 explained': FiFileText,
-  'GDPR data breach requirements': FiScale,
+  'GDPR data breach requirements': FiBook,
   'Cloud security best practices (AWS/Azure/GCP)': FiCloud
 };
 
