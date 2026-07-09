@@ -1,3 +1,5 @@
+import { FiSearch, FiX } from 'react-icons/fi';
+
 interface MessageSearchProps {
   query: string;
   matchCount: number;
@@ -8,7 +10,7 @@ interface MessageSearchProps {
 export function MessageSearch({ query, matchCount, onChange, onClose }: MessageSearchProps) {
   return (
     <div className="message-search" role="search" aria-label="Search messages">
-      <span className="search-icon" aria-hidden="true">🔍</span>
+      <FiSearch className="search-icon" aria-hidden="true" size={20} />
       <input
         className="search-input"
         type="search"
@@ -23,7 +25,9 @@ export function MessageSearch({ query, matchCount, onChange, onClose }: MessageS
           {matchCount} match{matchCount !== 1 ? 'es' : ''}
         </span>
       )}
-      <button className="search-close-btn" onClick={onClose} aria-label="Close search">✕</button>
+      <button className="search-close-btn" onClick={onClose} aria-label="Close search">
+        <FiX size={16} />
+      </button>
     </div>
   );
 }

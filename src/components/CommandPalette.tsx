@@ -1,3 +1,5 @@
+import { FiTrash2, FiBook, FiSearch, FiMap } from 'react-icons/fi';
+
 interface Command {
   trigger: string;
   label: string;
@@ -6,11 +8,18 @@ interface Command {
   icon: string;
 }
 
+const COMMAND_ICONS: Record<string, any> = {
+  '/clear': FiTrash2,
+  '/explain': FiBook,
+  '/cve': FiSearch,
+  '/scan': FiMap
+};
+
 const COMMANDS: Command[] = [
-  { trigger: '/clear', label: '/clear', description: 'Clear conversation', template: '/clear', icon: '🗑️' },
-  { trigger: '/explain', label: '/explain <tool>', description: 'Explain a security tool', template: '/explain ', icon: '📖' },
-  { trigger: '/cve', label: '/cve <CVE-ID>', description: 'Look up a CVE', template: '/cve ', icon: '🔍' },
-  { trigger: '/scan', label: '/scan <target>', description: 'Generate a recon command', template: '/scan ', icon: '🗺️' },
+  { trigger: '/clear', label: '/clear', description: 'Clear conversation', template: '/clear', icon: '' },
+  { trigger: '/explain', label: '/explain <tool>', description: 'Explain a security tool', template: '/explain ', icon: '' },
+  { trigger: '/cve', label: '/cve <CVE-ID>', description: 'Look up a CVE', template: '/cve ', icon: '' },
+  { trigger: '/scan', label: '/scan <target>', description: 'Generate a recon command', template: '/scan ', icon: '' },
 ];
 
 interface CommandPaletteProps {
@@ -46,7 +55,7 @@ export function CommandPalette({ input, onSelect, onExecute }: CommandPalettePro
             }
           }}
         >
-          <span className="command-icon" aria-hidden="true">{cmd.icon}</span>
+          <COMMAND_ICONS[cmd.trigger as keyof typeof COMMAND_ICONS] className="command-icon" aria-hidden="true" size={18} />
           <div className="command-info">
             <span className="command-label">{cmd.label}</span>
             <span className="command-desc">{cmd.description}</span>

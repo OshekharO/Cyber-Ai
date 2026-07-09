@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { FiShield } from 'react-icons/fi';
 
 interface AuthScreenProps {
   loading: boolean;
@@ -49,7 +50,9 @@ export function AuthScreen({ loading, error, configError, onSignIn, onSignUp }: 
     <main className="screen-shell auth-shell">
       <section className="auth-card">
         <div className="auth-brand-block">
-          <div className="auth-brand-icon">🛡️</div>
+          <div className="auth-brand-icon">
+            <FiShield size={48} />
+          </div>
           <div>
             <p className="auth-kicker">Cyber AI</p>
             <h1 className="auth-title">Sign in</h1>

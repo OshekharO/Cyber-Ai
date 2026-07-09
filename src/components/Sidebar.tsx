@@ -1,3 +1,4 @@
+import { FiMessageSquare, FiPlus, FiX, FiTrash2 } from 'react-icons/fi';
 import type { Session } from '../hooks/useChat.ts';
 
 interface SidebarProps {
@@ -19,11 +20,13 @@ export function Sidebar({ sessions, activeSessionId, open, onNew, onSwitch, onDe
       <aside className={`sidebar${open ? ' sidebar--open' : ''}`} aria-label="Chat sessions">
         <div className="sidebar-header">
           <span className="sidebar-title">Sessions</span>
-          <button className="sidebar-close-btn" onClick={onClose} aria-label="Close sidebar">✕</button>
+          <button className="sidebar-close-btn" onClick={onClose} aria-label="Close sidebar">
+            <FiX size={16} />
+          </button>
         </div>
 
         <button className="new-chat-btn" onClick={onNew} aria-label="New chat">
-          <span>＋</span> New Chat
+          <FiPlus size={20} /> New Chat
         </button>
 
         <nav className="session-list" role="list">
@@ -39,7 +42,7 @@ export function Sidebar({ sessions, activeSessionId, open, onNew, onSwitch, onDe
                 aria-current={session.id === activeSessionId ? 'page' : undefined}
                 title={session.name}
               >
-                <span className="session-icon">💬</span>
+                <FiMessageSquare className="session-icon" size={18} />
                 <span className="session-name">{session.name}</span>
               </button>
               <button
@@ -48,7 +51,7 @@ export function Sidebar({ sessions, activeSessionId, open, onNew, onSwitch, onDe
                 aria-label={`Delete session "${session.name}"`}
                 title="Delete"
               >
-                🗑️
+                <FiTrash2 size={16} />
               </button>
             </div>
           ))}
