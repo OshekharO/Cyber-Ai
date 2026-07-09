@@ -75,6 +75,10 @@ export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignO
           onSwitch={chat.switchSession}
           onDelete={chat.deleteSession}
           onClose={() => chat.setSidebarOpen(false)}
+          userLabel={userLabel}
+          isAdmin={isAdmin}
+          onOpenAdmin={onOpenAdmin}
+          onSignOut={onSignOut}
         />
 
         <div className="chat-container">

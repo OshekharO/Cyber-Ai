@@ -1,4 +1,4 @@
-import { FiMessageSquare, FiPlus, FiX, FiTrash2 } from 'react-icons/fi';
+import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiSettings } from 'react-icons/fi';
 import type { Session } from '../hooks/useChat.ts';
 
 interface SidebarProps {
@@ -9,9 +9,25 @@ interface SidebarProps {
   onSwitch: (id: string) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
+  userLabel?: string;
+  isAdmin?: boolean;
+  onOpenAdmin?: () => void;
+  onSignOut?: () => void;
 }
 
-export function Sidebar({ sessions, activeSessionId, open, onNew, onSwitch, onDelete, onClose }: SidebarProps) {
+export function Sidebar({ 
+  sessions, 
+  activeSessionId, 
+  open, 
+  onNew, 
+  onSwitch, 
+  onDelete, 
+  onClose,
+  userLabel,
+  isAdmin,
+  onOpenAdmin,
+  onSignOut 
+}: SidebarProps) {
   return (
     <>
       {/* Mobile backdrop */}
@@ -56,6 +72,42 @@ export function Sidebar({ sessions, activeSessionId, open, onNew, onSwitch, onDe
             </div>
           ))}
         </nav>
+
+        {/* User section at bottom */}
+        {(userLabel || isAdmin || onOpenAdmin || onSignOut) && (
+          <div className="sidebar-user-section">
+            {userLabel && (
+              <div className="sidebar-user-info" title={userLabel}>
+                <FiSettings size={14} />
+                <span>{userLabel}</span>
+              </div>
+            )}
+            
+            {isAdmin && onOpenAdmin && (
+              <button
+                className="sidebar-admin-btn"
+                onClick={onOpenAdmin}
+                aria-label="Open admin dashboard"
+                title="Admin dashboard"
+              >
+                <FiSettings size={16} />
+                <span>Admin Panel</span>
+              </button>
+            )}
+            
+            {onSignOut && (
+              <button
+                className="sidebar-logout-btn"
+                onClick={onSignOut}
+                aria-label="Sign out"
+                title="Sign out"
+              >
+                <FiLogOut size={16} />
+                <span>Sign Out</span>
+              </button>
+            )}
+          </div>
+        )}
       </aside>
     </>
   );
