@@ -83,6 +83,7 @@ export function Sidebar({
                 aria-label="User profile"
               >
                 <FiUser size={20} />
+                <span>{userLabel}</span>
               </button>
             )}
             
