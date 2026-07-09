@@ -55,7 +55,10 @@ export function CommandPalette({ input, onSelect, onExecute }: CommandPalettePro
             }
           }}
         >
-          <COMMAND_ICONS[cmd.trigger as keyof typeof COMMAND_ICONS] className="command-icon" aria-hidden="true" size={18} />
+          {(() => {
+            const IconComponent = COMMAND_ICONS[cmd.trigger as keyof typeof COMMAND_ICONS];
+            return IconComponent ? <IconComponent className="command-icon" aria-hidden="true" size={18} /> : null;
+          })()}
           <div className="command-info">
             <span className="command-label">{cmd.label}</span>
             <span className="command-desc">{cmd.description}</span>

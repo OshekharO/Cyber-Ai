@@ -138,7 +138,10 @@ export function WelcomeScreen({ onSend }: WelcomeScreenProps) {
               className={`suggestion-tab${cat.label === activeCategory ? ' suggestion-tab--active' : ''}`}
               onClick={() => setActiveCategory(cat.label)}
             >
-              <CATEGORY_ICONS[cat.label] aria-hidden="true" size={18} />
+              {(() => {
+                const IconComponent = CATEGORY_ICONS[cat.label];
+                return IconComponent ? <IconComponent aria-hidden="true" size={18} /> : null;
+              })()}
               <span>{cat.label}</span>
             </button>
           ))}
@@ -152,7 +155,10 @@ export function WelcomeScreen({ onSend }: WelcomeScreenProps) {
               className="suggestion-chip"
               onClick={() => onSend(s.text)}
             >
-              <ITEM_ICONS[s.text] className="chip-icon" aria-hidden="true" size={18} />
+              {(() => {
+                const IconComponent = ITEM_ICONS[s.text];
+                return IconComponent ? <IconComponent className="chip-icon" aria-hidden="true" size={18} /> : null;
+              })()}
               <span className="chip-text">{s.text}</span>
             </button>
           ))}
