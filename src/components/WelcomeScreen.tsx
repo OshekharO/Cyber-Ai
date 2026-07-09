@@ -5,9 +5,9 @@ import {
   FiTarget,
   FiUser,
   FiZap,
-  FiWrench,
-  FiMap,
-  FiBomb,
+  FiTool,
+  FiMap as FiMapIcon,
+  FiAlertCircle,
   FiSearch,
   FiFlag,
   FiGlobe,
@@ -15,7 +15,7 @@ import {
   FiKey,
   FiFileText,
   FiShield,
-  FiClipboard,
+  FiList,
   FiScale,
   FiCloud
 } from 'react-icons/fi';
@@ -23,6 +23,12 @@ import {
 interface SuggestionItem {
   icon: string;
   text: string;
+}
+
+interface SuggestionCategory {
+  label: string;
+  icon: string;
+  items: SuggestionItem[];
 }
 
 interface CategoryIconMap {
@@ -35,9 +41,9 @@ interface ItemIconMap {
 
 const CATEGORY_ICONS: CategoryIconMap = {
   'Threats': FiAlertTriangle,
-  'Tools': FiWrench,
+  'Tools': FiTool,
   'CTF': FiFlag,
-  'Compliance': FiClipboard
+  'Compliance': FiList
 };
 
 const ITEM_ICONS: ItemIconMap = {
@@ -45,9 +51,9 @@ const ITEM_ICONS: ItemIconMap = {
   'What is a zero-day exploit?': FiTarget,
   'How do APT groups operate?': FiUser,
   'Difference between virus, worm, and trojan': FiZap,
-  'How to use Nmap for network scanning?': FiMap,
+  'How to use Nmap for network scanning?': FiMapIcon,
   'Guide to Burp Suite web app testing': FiSearch,
-  'Getting started with Metasploit': FiBomb,
+  'Getting started with Metasploit': FiAlertCircle,
   'How to analyse packets with Wireshark?': FiSearch,
   'Common web CTF vulnerabilities (XSS, SQLi)': FiGlobe,
   'Intro to binary exploitation (pwn)': FiLock,
