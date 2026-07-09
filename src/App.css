@@ -420,21 +420,23 @@
   background: rgba(0, 0, 0, 0.03);
 }
 
-.sidebar-user-info {
+.sidebar-profile-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 100%;
   padding: 8px 10px;
+  border: none;
   border-radius: 8px;
-  font-size: 13px;
+  background: transparent;
   color: var(--text-secondary);
-  cursor: default;
-  transition: background 0.15s;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
-.sidebar-user-info:hover {
+.sidebar-profile-btn:hover {
   background: var(--accent-dim);
-  color: var(--text-primary);
+  color: var(--accent);
 }
 
 .sidebar-admin-btn,

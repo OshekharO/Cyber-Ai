@@ -46,15 +46,11 @@ export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignO
         loading={chat.loading}
         hasMessages={chat.messages.length > 0}
         sidebarOpen={chat.sidebarOpen}
-        userLabel={userLabel}
-        isAdmin={isAdmin}
         onToggleTheme={chat.toggleTheme}
         onToggleSearch={chat.toggleSearch}
         onToggleSidebar={chat.toggleSidebar}
         onExport={chat.exportMarkdown}
         onClear={chat.clearMessages}
-        onOpenAdmin={isAdmin ? onOpenAdmin : undefined}
-        onSignOut={onSignOut}
       />
 
       {chat.searchOpen && (

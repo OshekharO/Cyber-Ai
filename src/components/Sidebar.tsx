@@ -1,4 +1,4 @@
-import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiSettings } from 'react-icons/fi';
+import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings } from 'react-icons/fi';
 import type { Session } from '../hooks/useChat.ts';
 
 interface SidebarProps {
@@ -77,10 +77,13 @@ export function Sidebar({
         {(userLabel || isAdmin || onOpenAdmin || onSignOut) && (
           <div className="sidebar-user-section">
             {userLabel && (
-              <div className="sidebar-user-info" title={userLabel}>
-                <FiSettings size={14} />
-                <span>{userLabel}</span>
-              </div>
+              <button
+                className="sidebar-profile-btn"
+                title={`Profile: ${userLabel}`}
+                aria-label="User profile"
+              >
+                <FiUser size={20} />
+              </button>
             )}
             
             {isAdmin && onOpenAdmin && (

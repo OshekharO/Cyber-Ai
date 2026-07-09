@@ -1,18 +1,16 @@
+import { FiMenu, FiShield, FiSearch, FiDownload, FiTrash2, FiSun, FiMoon } from 'react-icons/fi';
+
 interface HeaderProps {
   theme: 'dark' | 'light';
   searchOpen: boolean;
   loading: boolean;
   hasMessages: boolean;
   sidebarOpen: boolean;
-  userLabel?: string;
-  isAdmin?: boolean;
   onToggleTheme: () => void;
   onToggleSearch: () => void;
   onToggleSidebar: () => void;
   onExport: () => void;
   onClear: () => void;
-  onOpenAdmin?: () => void;
-  onSignOut?: () => void;
 }
 
 export function Header({
@@ -21,15 +19,11 @@ export function Header({
   loading,
   hasMessages,
   sidebarOpen,
-  userLabel,
-  isAdmin,
   onToggleTheme,
   onToggleSearch,
   onToggleSidebar,
   onExport,
   onClear,
-  onOpenAdmin,
-  onSignOut,
 }: HeaderProps) {
   return (
     <header className="header" role="banner">
@@ -40,41 +34,18 @@ export function Header({
           aria-label="Toggle session sidebar"
           aria-expanded={sidebarOpen}
         >
-          ☰
+          <FiMenu size={18} />
         </button>
 
         <div className="header-brand">
-          <div className="header-logo" aria-hidden="true">🛡️</div>
+          <div className="header-logo" aria-hidden="true">
+            <FiShield size={18} />
+          </div>
           <span className="header-title">Cyber AI</span>
         </div>
       </div>
 
       <div className="header-actions">
-        {(userLabel || isAdmin || onOpenAdmin || onSignOut) && (
-          <div className="header-account">
-            {userLabel && <span className="header-user-chip" title={userLabel}>{userLabel}</span>}
-            {isAdmin && onOpenAdmin && (
-              <button
-                className="header-account-btn"
-                onClick={onOpenAdmin}
-                aria-label="Open admin dashboard"
-                title="Admin dashboard"
-              >
-                Admin
-              </button>
-            )}
-            {onSignOut && (
-              <button
-                className="header-account-btn header-account-btn--ghost"
-                onClick={onSignOut}
-                aria-label="Sign out"
-                title="Sign out"
-              >
-                Sign out
-              </button>
-            )}
-          </div>
-        )}
 
         {hasMessages && (
           <>
@@ -85,7 +56,7 @@ export function Header({
               aria-pressed={searchOpen}
               title="Search messages"
             >
-              🔍
+              <FiSearch size={18} />
             </button>
             <button
               className="header-icon-btn"
@@ -94,7 +65,7 @@ export function Header({
               title="Export as Markdown"
               disabled={loading}
             >
-              ⬇️
+              <FiDownload size={18} />
             </button>
             <button
               className="header-icon-btn"
@@ -103,7 +74,7 @@ export function Header({
               title="Clear conversation"
               disabled={loading}
             >
-              🗑️
+              <FiTrash2 size={18} />
             </button>
           </>
         )}
@@ -114,7 +85,7 @@ export function Header({
           aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
           title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
         >
-          {theme === 'dark' ? '☀️' : '🌙'}
+          {theme === 'dark' ? <FiSun size={18} /> : <FiMoon size={18} />}
         </button>
 
         <div className="header-status" aria-live="polite" aria-label={loading ? 'Processing' : 'Online'}>
