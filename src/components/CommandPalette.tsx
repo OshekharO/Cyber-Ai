@@ -1,11 +1,3 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faTrash,
-  faBook,
-  faSearch,
-  faMapMarkedAlt
-} from '@fortawesome/free-solid-svg-icons';
-
 interface Command {
   trigger: string;
   label: string;
@@ -14,18 +6,11 @@ interface Command {
   icon: string;
 }
 
-const COMMAND_ICONS = {
-  '/clear': faTrash,
-  '/explain': faBook,
-  '/cve': faSearch,
-  '/scan': faMapMarkedAlt
-};
-
 const COMMANDS: Command[] = [
-  { trigger: '/clear', label: '/clear', description: 'Clear conversation', template: '/clear', icon: '' },
-  { trigger: '/explain', label: '/explain <tool>', description: 'Explain a security tool', template: '/explain ', icon: '' },
-  { trigger: '/cve', label: '/cve <CVE-ID>', description: 'Look up a CVE', template: '/cve ', icon: '' },
-  { trigger: '/scan', label: '/scan <target>', description: 'Generate a recon command', template: '/scan ', icon: '' },
+  { trigger: '/clear', label: '/clear', description: 'Clear conversation', template: '/clear', icon: '🗑️' },
+  { trigger: '/explain', label: '/explain <tool>', description: 'Explain a security tool', template: '/explain ', icon: '📖' },
+  { trigger: '/cve', label: '/cve <CVE-ID>', description: 'Look up a CVE', template: '/cve ', icon: '🔍' },
+  { trigger: '/scan', label: '/scan <target>', description: 'Generate a recon command', template: '/scan ', icon: '🗺️' },
 ];
 
 interface CommandPaletteProps {
@@ -61,7 +46,7 @@ export function CommandPalette({ input, onSelect, onExecute }: CommandPalettePro
             }
           }}
         >
-          <FontAwesomeIcon icon={COMMAND_ICONS[cmd.trigger as keyof typeof COMMAND_ICONS]} className="command-icon" aria-hidden="true" />
+          <span className="command-icon" aria-hidden="true">{cmd.icon}</span>
           <div className="command-info">
             <span className="command-label">{cmd.label}</span>
             <span className="command-desc">{cmd.description}</span>

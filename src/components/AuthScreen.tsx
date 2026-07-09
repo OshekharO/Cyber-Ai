@@ -1,6 +1,4 @@
 import { useState, type FormEvent } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faShieldAlt } from '@fortawesome/free-solid-svg-icons';
 
 interface AuthScreenProps {
   loading: boolean;
@@ -51,9 +49,7 @@ export function AuthScreen({ loading, error, configError, onSignIn, onSignUp }: 
     <main className="screen-shell auth-shell">
       <section className="auth-card">
         <div className="auth-brand-block">
-          <div className="auth-brand-icon">
-            <FontAwesomeIcon icon={faShieldAlt} size="3x" />
-          </div>
+          <div className="auth-brand-icon">🛡️</div>
           <div>
             <p className="auth-kicker">Cyber AI</p>
             <h1 className="auth-title">Sign in</h1>
