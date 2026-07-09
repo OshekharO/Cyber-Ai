@@ -1,3 +1,6 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faSearch, faTimes } from '@fortawesome/free-solid-svg-icons';
+
 interface MessageSearchProps {
   query: string;
   matchCount: number;
@@ -8,7 +11,7 @@ interface MessageSearchProps {
 export function MessageSearch({ query, matchCount, onChange, onClose }: MessageSearchProps) {
   return (
     <div className="message-search" role="search" aria-label="Search messages">
-      <span className="search-icon" aria-hidden="true">🔍</span>
+      <FontAwesomeIcon icon={faSearch} className="search-icon" aria-hidden="true" />
       <input
         className="search-input"
         type="search"
@@ -23,7 +26,9 @@ export function MessageSearch({ query, matchCount, onChange, onClose }: MessageS
           {matchCount} match{matchCount !== 1 ? 'es' : ''}
         </span>
       )}
-      <button className="search-close-btn" onClick={onClose} aria-label="Close search">✕</button>
+      <button className="search-close-btn" onClick={onClose} aria-label="Close search">
+        <FontAwesomeIcon icon={faTimes} />
+      </button>
     </div>
   );
 }
