@@ -759,9 +759,7 @@
 
 .admin-shell {
   align-items: stretch;
-  place-items: stretch;
   background: linear-gradient(180deg, rgba(10, 14, 26, 0.84), rgba(10, 14, 26, 0.98));
-  padding: 16px;
 }
 
 .admin-topbar,
@@ -893,15 +891,8 @@
 
   /* Admin dashboard mobile fixes */
   .admin-shell {
-    padding: 12px;
-    align-items: stretch;
-    place-items: stretch;
-  }
-
-  .admin-panel {
-    width: 100%;
     padding: 16px;
-    border-radius: 16px;
+    align-items: flex-start;
   }
 
   .admin-topbar {
@@ -910,94 +901,31 @@
     gap: 12px;
   }
 
-  .admin-kicker {
-    font-size: 10px;
-  }
-
-  .admin-title {
-    font-size: 20px;
-  }
-
-  .admin-subtitle {
-    font-size: 13px;
-    margin-top: 8px;
-  }
-
   .admin-actions {
     width: 100%;
     justify-content: flex-start;
-    gap: 8px;
-  }
-
-  .admin-secondary-btn,
-  .admin-refresh-btn,
-  .admin-danger-btn {
-    padding: 8px 12px;
-    font-size: 13px;
   }
 
   .admin-stats {
     flex-direction: column;
-    gap: 10px;
   }
 
   .admin-stat-card {
     min-width: 0;
     width: 100%;
-    padding: 14px;
-    border-radius: 14px;
-  }
-
-  .admin-stat-card span {
-    font-size: 11px;
-  }
-
-  .admin-stat-card strong {
-    font-size: 24px;
   }
 
   .admin-toolbar {
     flex-direction: column;
     align-items: stretch;
-    margin: 14px 0;
-    gap: 10px;
   }
 
   .admin-search {
     flex: 1 1 auto;
   }
 
-  .admin-search input {
-    padding: 10px 12px;
-    font-size: 14px;
-  }
-
-  .admin-table-wrap {
-    border-radius: 14px;
-    margin: 0 -4px;
-  }
-
   .admin-table {
-    min-width: 580px;
-  }
-
-  .admin-table th,
-  .admin-table td {
-    padding: 10px 12px;
-    font-size: 13px;
-  }
-
-  .admin-role-select {
-    min-width: 100px;
-    padding: 8px 10px;
-    font-size: 13px;
-  }
-
-  .admin-notice,
-  .admin-error {
-    padding: 10px 12px;
-    font-size: 13px;
-    border-radius: 10px;
+    min-width: 600px;
   }
 }
 
@@ -1950,45 +1878,4 @@
 
   .welcome-title { font-size: 20px; }
   .welcome-subtitle { font-size: 13px; }
-
-  /* Admin dashboard very small screen fixes */
-  .admin-shell {
-    padding: 8px;
-  }
-
-  .admin-panel {
-    padding: 12px;
-    border-radius: 12px;
-  }
-
-  .admin-title {
-    font-size: 18px;
-  }
-
-  .admin-actions {
-    flex-direction: column;
-  }
-
-  .admin-secondary-btn,
-  .admin-refresh-btn,
-  .admin-danger-btn {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-    padding: 10px 12px;
-  }
-
-  .admin-stat-card strong {
-    font-size: 22px;
-  }
-
-  .admin-table {
-    min-width: 500px;
-  }
-
-  .admin-table th,
-  .admin-table td {
-    padding: 8px 10px;
-    font-size: 12px;
-  }
 }
