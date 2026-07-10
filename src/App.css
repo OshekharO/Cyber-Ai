@@ -585,11 +585,11 @@
   backdrop-filter: blur(18px);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
+  max-width: 100%;
+  box-sizing: border-box;
 
 .admin-panel {
   width: min(100%, 1240px);
-  max-width: 100%;
-  box-sizing: border-box;
 }
 
 .auth-brand-block {
