@@ -2,7 +2,8 @@
 .app {
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 100dvh;
+  height: 100vh;
   background: var(--bg-primary);
   position: relative;
   overflow: hidden;
@@ -520,12 +521,15 @@
   min-height: 100dvh;
   min-height: 100vh;
   width: 100%;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 24px;
   position: relative;
   z-index: 1;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .screen-shell::before {
@@ -581,6 +585,8 @@
   backdrop-filter: blur(18px);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
+  max-width: 100%;
+  box-sizing: border-box;
 
 .admin-panel {
   width: min(100%, 1240px);
@@ -756,9 +762,10 @@
 .admin-danger-btn:hover {
   transform: translateY(-1px);
 }
-
-.admin-shell {
-  align-items: stretch;
+justify-content: flex-start;
+  background: linear-gradient(180deg, rgba(10, 14, 26, 0.84), rgba(10, 14, 26, 0.98));
+  padding: 16px;
+  overflow-x: hiddenstretch;
   place-items: stretch;
   background: linear-gradient(180deg, rgba(10, 14, 26, 0.84), rgba(10, 14, 26, 0.98));
   padding: 16px;
@@ -972,25 +979,84 @@
     font-size: 14px;
   }
 
+  /* Transform table into vertical card layout on mobile */
   .admin-table-wrap {
     border-radius: 14px;
-    margin: 0 -4px;
+    margin: 0;
+    overflow: visible;
   }
 
   .admin-table {
-    min-width: 580px;
+    min-width: 0;
+    display: block;
   }
 
-  .admin-table th,
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .admin-table tr {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: rgba(10, 14, 26, 0.4);
+  }
+
   .admin-table td {
-    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0;
+    border-bottom: none;
     font-size: 13px;
+  }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 80px;
+  }
+
+  .admin-user-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    text-align: right;
   }
 
   .admin-role-select {
-    min-width: 100px;
-    padding: 8px 10px;
+    min-width: 0;
+    width: auto;
+    padding: 6px 8px;
     font-size: 13px;
+  }
+
+  .admin-danger-btn {
+    width: auto;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .admin-empty {
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
   }
 
   .admin-notice,
@@ -1864,19 +1930,18 @@
   .welcome-logo { width: 52px; height: 52px; font-size: 24px; border-radius: 16px; }
   .welcome { gap: 20px; padding: 20px 16px 24px; }
 
-  .bubble--ai h1 { font-size: 16px; }
-  .bubble--ai h2 { font-size: 14px; }
-
-  .input-hint { display: none; }
-
-  /* Ensure chat content is not hidden behind header on small screens */
-  .app {
-    height: 100dvh;
-    height: 100vh;
+  .bub-body {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
   }
 
-  .app-body {
-    height: calc(100% - var(--header-height));
+  .chat-container {
+    min-height: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden(100% - var(--header-height));
     min-height: 0;
   }
 
@@ -1902,6 +1967,7 @@
 
   .bubble {
     padding: 10px 13px;
+    flex-shrink: 0;
     font-size: 13px;
   }
 
@@ -1952,6 +2018,10 @@
   .welcome-subtitle { font-size: 13px; }
 
   /* Admin dashboard very small screen fixes */
+  .screen-shell {
+    padding: 12px;
+  }
+
   .admin-shell {
     padding: 8px;
   }
@@ -1982,13 +2052,18 @@
     font-size: 22px;
   }
 
-  .admin-table {
-    min-width: 500px;
+  /* Card layout adjustments for very small screens */
+  .admin-table tr {
+    padding: 12px;
+    gap: 6px;
   }
 
-  .admin-table th,
   .admin-table td {
-    padding: 8px 10px;
     font-size: 12px;
+  }
+
+  .admin-table td::before {
+    font-size: 10px;
+    min-width: 70px;
   }
 }
