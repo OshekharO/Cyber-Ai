@@ -176,17 +176,17 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
               ) : (
                 filteredUsers.map(user => (
                   <tr key={user.id}>
-                    <td data-label="User"><div className="admin-user-cell"><strong>{user.full_name ?? 'Unnamed user'}</strong><span>{user.id}</span></div></td>
-                    <td data-label="Email">{user.email ?? 'No email'}</td>
-                    <td data-label="Role">
+                    <td><div className="admin-user-cell"><strong>{user.full_name ?? 'Unnamed user'}</strong><span>{user.id}</span></div></td>
+                    <td>{user.email ?? 'No email'}</td>
+                    <td>
                       <select className="admin-role-select" value={user.role} onChange={(event) => void updateRole(user.id, event.target.value as 'user' | 'admin')} disabled={savingId === user.id}>
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                       </select>
                     </td>
-                    <td data-label="Created">{new Date(user.created_at).toLocaleDateString()}</td>
-                    <td data-label="Last sign in">{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}</td>
-                    <td data-label="Actions"><button className="admin-danger-btn" onClick={() => void deleteUser(user.id)} disabled={savingId === user.id}>Delete</button></td>
+                    <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                    <td>{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}</td>
+                    <td><button className="admin-danger-btn" onClick={() => void deleteUser(user.id)} disabled={savingId === user.id}>Delete</button></td>
                   </tr>
                 ))
               )}
