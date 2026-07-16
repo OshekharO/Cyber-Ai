@@ -314,68 +314,7 @@ export function useChat(storageScope = 'global') {
     setSidebarOpen(o => !o);
   }, []);
 
-  // -- Export / Import
-
-  const exportAllSessions = useCallback(() => {
-    if (sessions.length === 0) return;
-    const data = {
-      version: 1,
-      exportedAt: new Date().toISOString(),
-      sessions: sessions.map(s => ({
-        id: s.id,
-        name: s.name,
-        messages: s.messages,
-        createdAt: s.createdAt,
-        updatedAt: s.updatedAt,
-      })),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `cyber-ai-sessions-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [sessions]);
-
-  const importSessions = useCallback((file: File) => {
-    return new Promise<void>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const text = e.target?.result as string;
-          const data = JSON.parse(text);
-          
-          // Validate the imported data structure
-          if (!data.sessions || !Array.isArray(data.sessions)) {
-            throw new Error('Invalid file format: missing sessions array');
-          }
-          
-          // Validate each session has required fields
-          const validSessions = data.sessions.filter((s: any) => 
-            s.id && s.name && Array.isArray(s.messages) && s.createdAt && s.updatedAt
-          );
-          
-          if (validSessions.length === 0) {
-            throw new Error('No valid sessions found in file');
-          }
-          
-          // Merge with existing sessions (avoid duplicates by ID)
-          setSessions(prev => {
-            const existingIds = new Set(prev.map(s => s.id));
-            const newSessions = validSessions.filter((s: any) => !existingIds.has(s.id));
-            return [...newSessions, ...prev];
-          });
-          
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
-      };
-      reader.onerror = () => reject(new Error('Failed to read file'));
-      reader.readAsText(file);
-    });
-  }, []);
+  // -- Export
 
   const exportMarkdown = useCallback(() => {
     if (messages.length === 0) return;
@@ -430,7 +369,5 @@ export function useChat(storageScope = 'global') {
     setError,
     // Export
     exportMarkdown,
-    exportSessions: exportAllSessions,
-    importSessions,
   };
 }
