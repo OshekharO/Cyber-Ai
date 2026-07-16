@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import { AuthScreen } from './components/AuthScreen.tsx';
 import { ChatWorkspace } from './components/ChatWorkspace.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
@@ -85,6 +86,7 @@ export default function App() {
             <p>Loading secure workspace...</p>
           </div>
         </main>
+        <Analytics />
       </>
     );
   }
@@ -100,6 +102,7 @@ export default function App() {
           onSignIn={auth.signIn}
           onSignUp={auth.signUp}
         />
+        <Analytics />
       </>
     );
   }
@@ -115,6 +118,7 @@ export default function App() {
           onSignOut={signOut}
           notice={auth.error}
         />
+        <Analytics />
       </>
     );
   }
@@ -129,6 +133,7 @@ export default function App() {
         onOpenAdmin={openAdmin}
         onSignOut={signOut}
       />
+      <Analytics />
     </>
   );
 }
