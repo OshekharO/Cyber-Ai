@@ -6,7 +6,7 @@ import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/pris
 import type { Components } from 'react-markdown';
 import type { Message } from '../hooks/useChat.ts';
 import { FaRobot } from 'react-icons/fa';
-import { FiCopy } from 'react-icons/fi';
+import { FiCopy, FiThumbsUp, FiThumbsDown, FiRefreshCw } from 'react-icons/fi';
 
 // Register only the languages needed for a cybersecurity context.
 // Using PrismLight + explicit registration keeps the bundle ~80 % smaller
@@ -149,7 +149,7 @@ function MessageActions({ message, isLast, isUser, onFeedback, onRegenerate }: A
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
-    await copyToClipboard(message.content);
+    await navigator.clipboard.writeText(message.content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [message.content]);
@@ -162,7 +162,8 @@ function MessageActions({ message, isLast, isUser, onFeedback, onRegenerate }: A
         aria-label="Copy message"
         title="Copy"
       >
-        {copied ? '✅' : '📋'}
+        <FiCopy size={14} />
+        {copied && <span className="copy-feedback">Copied!</span>}
       </button>
 
       {!isUser && (
@@ -174,7 +175,7 @@ function MessageActions({ message, isLast, isUser, onFeedback, onRegenerate }: A
             aria-pressed={message.feedback === 'up'}
             title="Good response"
           >
-            👍
+            <FiThumbsUp size={14} />
           </button>
           <button
             className={`msg-action-btn${message.feedback === 'down' ? ' msg-action-btn--active' : ''}`}
@@ -183,7 +184,7 @@ function MessageActions({ message, isLast, isUser, onFeedback, onRegenerate }: A
             aria-pressed={message.feedback === 'down'}
             title="Poor response"
           >
-            👎
+            <FiThumbsDown size={14} />
           </button>
           {isLast && (
             <button
@@ -192,7 +193,7 @@ function MessageActions({ message, isLast, isUser, onFeedback, onRegenerate }: A
               aria-label="Regenerate response"
               title="Regenerate"
             >
-              🔁
+              <FiRefreshCw size={14} />
             </button>
           )}
         </>
@@ -222,7 +223,7 @@ function MessageBubbleInner({ message, isLast, theme, onFeedback, onRegenerate }
       </div>
 
       <div className="message-body">
-        <div className={`bubble${isUser ? ' bubble--user' : ' bubble--ai'} bubble--with-copy`}>
+        <div className={`bubble${isUser ? ' bubble--user' : ' bubble--ai'}`}>
           {isUser ? (
             <div className="user-text">{message.content}</div>
           ) : (
@@ -233,24 +234,14 @@ function MessageBubbleInner({ message, isLast, theme, onFeedback, onRegenerate }
               {message.content}
             </Markdown>
           )}
-          <button
-            className="copy-btn"
-            onClick={() => {
-              navigator.clipboard.writeText(message.content);
-            }}
-            aria-label="Copy message"
-            title="Copy message"
-          >
-            <FiCopy size={14} />
-          </button>
         </div>
 
         <div className={`message-footer${isUser ? ' message-footer--user' : ''}`}>
           <time className="message-time" dateTime={message.timestamp}>
             {formatTime(message.timestamp)}
           </time>
-          {message.feedback === 'up' && <span className="feedback-badge">👍</span>}
-          {message.feedback === 'down' && <span className="feedback-badge">👎</span>}
+          {message.feedback === 'up' && <span className="feedback-badge"><FiThumbsUp size={12} /></span>}
+          {message.feedback === 'down' && <span className="feedback-badge"><FiThumbsDown size={12} /></span>}
         </div>
 
         <MessageActions

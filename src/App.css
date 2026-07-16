@@ -1580,51 +1580,57 @@
   border-color: #0369a1;
 }
 
-/* ── Copy button ── */
-.copy-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  opacity: 0;
-  background: var(--bg-input);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 4px 6px;
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s ease;
+/* ── Message actions ── */
+.message-actions {
   display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message:hover .message-actions {
+  opacity: 1;
+}
+
+.msg-action-btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  line-height: 1;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.bubble:hover .copy-btn {
-  opacity: 0.6;
-}
-
-.copy-btn:hover {
-  opacity: 1 !important;
-  background: var(--accent-dim);
-  border-color: var(--accent);
+.msg-action-btn:hover {
+  background: var(--bg-input);
   color: var(--text-primary);
-  transform: scale(1.05);
 }
 
-.copy-btn:active {
-  transform: scale(0.95);
+.msg-action-btn--active {
+  color: var(--accent);
 }
 
-.bubble--user .copy-btn {
-  color: rgba(255, 255, 255, 0.5);
-  border-color: rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+.msg-action-btn--active:hover {
+  color: var(--accent);
 }
 
-.bubble--user .copy-btn:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.2);
+.copy-feedback {
+  font-size: 11px;
+  color: var(--accent-green);
+  animation: fadeInOut 1.5s ease forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateX(-4px); }
+  20% { opacity: 1; transform: translateX(0); }
+  80% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(4px); }
 }
 
 .user-text {
