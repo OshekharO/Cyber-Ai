@@ -1765,10 +1765,15 @@
 
 .send-btn svg {
   color: #fff;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+}
+
+[data-theme="light"] .send-btn svg {
+  color: #1a1a2e;
+  filter: none;
 }
 
 .send-btn::after {
@@ -1802,7 +1807,7 @@
 }
 
 .send-btn:disabled svg {
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
   filter: none;
 }
 
