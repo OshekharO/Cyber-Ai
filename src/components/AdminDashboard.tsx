@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import type { Profile } from '../hooks/useAuth.ts';
 
 interface AdminDashboardProps {
@@ -25,6 +25,15 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   const [savingId, setSavingId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error'; message: string }>>([]);
+
+  const showToast = useCallback((type: 'success' | 'error', message: string) => {
+    const id = crypto.randomUUID();
+    setToasts(prev => [...prev, { id, type, message }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, 4000);
+  }, []);
 
   const loadUsers = async () => {
     setLoading(true);
@@ -86,8 +95,11 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
       }
 
       await loadUsers();
+      showToast('success', `User role updated to ${role} successfully.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to update user.');
+      const msg = err instanceof Error ? err.message : 'Unable to update user.';
+      setError(msg);
+      showToast('error', msg);
     } finally {
       setSavingId(null);
     }
@@ -115,8 +127,11 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
       }
 
       await loadUsers();
+      showToast('success', 'User deleted successfully.');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to delete user.');
+      const msg = err instanceof Error ? err.message : 'Unable to delete user.';
+      setError(msg);
+      showToast('error', msg);
     } finally {
       setSavingId(null);
     }
@@ -169,8 +184,18 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
               </tr>
             </thead>
             <tbody>
-              {loading && filteredUsers.length === 0 ? (
-                <tr><td colSpan={6} className="admin-empty">Loading users...</td></tr>
+              {loading ? (
+                // Skeleton loading rows
+                Array.from({ length: 5 }).map((_, index) => (
+                  <tr key={`skeleton-${index}`} className="admin-skeleton-row">
+                    <td><div className="admin-skeleton-cell admin-skeleton-cell--long" /></td>
+                    <td><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
+                    <td><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
+                    <td><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
+                    <td><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
+                    <td><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
+                  </tr>
+                ))
               ) : filteredUsers.length === 0 ? (
                 <tr><td colSpan={6} className="admin-empty">No users found.</td></tr>
               ) : (
@@ -194,6 +219,23 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
           </table>
         </div>
       </section>
+
+      {/* Toast notifications */}
+      <div className="toast-container">
+        {toasts.map((toast) => (
+          <div key={toast.id} className={`toast toast--${toast.type}`}>
+            <span className="toast-icon">{toast.type === 'success' ? '✅' : '❌'}</span>
+            <span className="toast-content">{toast.message}</span>
+            <button
+              className="toast-close"
+              onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
+              aria-label="Dismiss notification"
+            >
+              ✕
+            </button>
+          </div>
+        ))}
+      </div>
     </main>
   );
 }
