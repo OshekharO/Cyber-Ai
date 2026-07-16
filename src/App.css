@@ -1799,7 +1799,6 @@
 }
 
 .send-btn:disabled {
-  background: var(--bg-input);
   border: 1px solid var(--border);
   box-shadow: none;
   cursor: not-allowed;
