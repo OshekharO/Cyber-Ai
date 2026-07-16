@@ -7,7 +7,7 @@ import { InputBar } from './InputBar.tsx';
 import { MessageSearch } from './MessageSearch.tsx';
 import { useChat } from '../hooks/useChat.ts';
 
-interface ChatWorkspaceProps {
+import { useChatWorkspaceProps {
   userId: string;
   userLabel: string;
   isAdmin: boolean;
@@ -113,6 +113,8 @@ export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignO
           isAdmin={isAdmin}
           onOpenAdmin={onOpenAdmin}
           onSignOut={onSignOut}
+          onExportSessions={chat.exportSessions}
+          onImportSessions={chat.importSessions}
         />
 
         <div className="chat-container">
