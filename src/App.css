@@ -1077,6 +1077,9 @@
 .admin-shell {
   align-items: stretch;
   background: linear-gradient(180deg, rgba(10, 14, 26, 0.84), rgba(10, 14, 26, 0.98));
+  overflow-y: auto;
+  max-height: 100vh;
+  padding: 20px;
 }
 
 .admin-topbar,
