@@ -1,5 +1,6 @@
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'https://ai-sqcn.onrender.com/api/chat';
 const BRAVE_API_URL = 'https://api.search.brave.com/res/v1/chat/completions';
+const CORS_PROXY = 'https://cors-bypasser-pro.vercel.app/';
 const BRAVE_API_TOKEN = import.meta.env.VITE_BRAVE_API_TOKEN as string | undefined;
 
 export type ChatRole = 'system' | 'user' | 'assistant';
@@ -82,17 +83,25 @@ async function callBraveAPI(
     return { role: m.role, content: m.content };
   }).filter(Boolean);
 
-  const res = await fetch(BRAVE_API_URL, {
+  // Use CORS proxy to avoid 405 Method Not Allowed error
+  const res = await fetch(`${CORS_PROXY}proxy`, {
     method: 'POST',
     headers: {
-      'X-Subscription-Token': BRAVE_API_TOKEN,
-      'Accept': 'application/json',
-      'Accept-Encoding': 'gzip',
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      stream: false,
-      messages: braveMessages,
+      url: BRAVE_API_URL,
+      method: 'POST',
+      headers: {
+        'X-Subscription-Token': BRAVE_API_TOKEN,
+        'Accept': 'application/json',
+        'Accept-Encoding': 'gzip',
+        'Content-Type': 'application/json',
+      },
+      body: {
+        stream: false,
+        messages: braveMessages,
+      },
     }),
     signal,
   });
