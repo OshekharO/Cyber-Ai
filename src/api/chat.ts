@@ -51,37 +51,21 @@ async function callBraveAPI(
     throw new Error('Brave API token not configured');
   }
 
-  // Brave API doesn't support 'system' role, so we prepend system instructions to the first user message
-  const braveMessages = messages.map((m, index) => {
-    if (m.role === 'system') {
-      // Skip system messages, they'll be prepended to the next user message
-      return null;
-    }
-    if (m.role === 'user' && index > 0) {
-      // Check if there was a system message before this user message
-      const hasPriorSystem = messages.slice(0, index).some(msg => msg.role === 'system');
-      if (hasPriorSystem) {
-        const systemMsg = messages.find(msg => msg.role === 'system');
-        if (systemMsg) {
-          return {
-            role: 'user',
-            content: `INSTRUCTIONS: ${systemMsg.content}\n\nQUESTION: ${m.content}`,
-          };
-        }
-      }
-    }
-    // For the first user message or if no system message exists
-    if (m.role === 'user') {
-      const systemMsg = messages.find(msg => msg.role === 'system');
-      if (systemMsg) {
-        return {
-          role: 'user',
-          content: `INSTRUCTIONS: ${systemMsg.content}\n\nQUESTION: ${m.content}`,
-        };
-      }
-    }
-    return { role: m.role, content: m.content };
-  }).filter(Boolean);
+  // Brave API fallback only supports a single message in the array.
+  // We take the last user message and prepend any system instructions.
+  const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+  const systemMsg = messages.find(m => m.role === 'system');
+
+  let finalContent = '';
+  if (systemMsg) {
+    finalContent += `INSTRUCTIONS: ${systemMsg.content}\n\n`;
+  }
+  finalContent += lastUserMsg ? lastUserMsg.content : '';
+
+  const braveMessages = [{
+    role: 'user',
+    content: finalContent,
+  }];
 
   // Use CORS proxy to avoid 405 Method Not Allowed error
   const res = await fetch(`${CORS_PROXY}proxy`, {
