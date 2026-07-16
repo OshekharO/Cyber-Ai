@@ -19,6 +19,8 @@ interface AdminUser {
   confirmed_at: string | null;
 }
 
+const PAGE_SIZE = 5;
+
 export function AdminDashboard({ session, profile, onBackToChat, onSignOut, notice }: AdminDashboardProps) {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +28,7 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   const [query, setQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error'; message: string }>>([]);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
     const id = crypto.randomUUID();
@@ -74,6 +77,19 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
     const adminCount = users.filter(user => user.role === 'admin').length;
     return { total: users.length, admins: adminCount, users: users.length - adminCount };
   }, [users]);
+
+  // Pagination logic
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    return filteredUsers.slice(start, end);
+  }, [filteredUsers, currentPage]);
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [query]);
 
   const updateRole = async (userId: string, role: 'user' | 'admin') => {
     setSavingId(userId);
@@ -196,10 +212,10 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
                     <td><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
                   </tr>
                 ))
-              ) : filteredUsers.length === 0 ? (
+              ) : paginatedUsers.length === 0 ? (
                 <tr><td colSpan={6} className="admin-empty">No users found.</td></tr>
               ) : (
-                filteredUsers.map(user => (
+                paginatedUsers.map(user => (
                   <tr key={user.id}>
                     <td><div className="admin-user-cell"><strong>{user.full_name ?? 'Unnamed user'}</strong><span>{user.id}</span></div></td>
                     <td>{user.email ?? 'No email'}</td>
@@ -218,6 +234,59 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
             </tbody>
           </table>
         </div>
+
+        {/* Pagination controls */}
+        {!loading && filteredUsers.length > 0 && (
+          <div className="admin-pagination">
+            <div className="admin-pagination-info">
+              Showing {((currentPage - 1) * PAGE_SIZE) + 1}–{Math.min(currentPage * PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length} users
+            </div>
+            <div className="admin-pagination-controls">
+              <button
+                className="admin-pagination-btn"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                aria-label="Previous page"
+              >
+                ←
+              </button>
+              {Array.from({ length: totalPages }).map((_, idx) => {
+                const page = idx + 1;
+                // Show current page, first, last, and pages around current
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <button
+                      key={page}
+                      className={`admin-pagination-btn ${page === currentPage ? 'admin-pagination-btn--active' : ''}`}
+                      onClick={() => setCurrentPage(page)}
+                      aria-label={`Go to page ${page}`}
+                      aria-current={page === currentPage ? 'page' : undefined}
+                    >
+                      {page}
+                    </button>
+                  );
+                }
+                // Show ellipsis for gaps
+                if (page === 2 || page === totalPages - 1) {
+                  return <span key={page} className="admin-pagination-ellipsis">…</span>;
+                }
+                return null;
+              })}
+              <button
+                className="admin-pagination-btn"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                aria-label="Next page"
+              >
+                →
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Toast notifications */}
