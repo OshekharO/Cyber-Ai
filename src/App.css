@@ -1753,6 +1753,11 @@
   overflow: hidden;
 }
 
+.send-btn svg {
+  color: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
 .send-btn::after {
   content: '';
   position: absolute;
@@ -1783,9 +1788,19 @@
   opacity: 0.4;
 }
 
+.send-btn:disabled svg {
+  color: var(--text-muted);
+  filter: none;
+}
+
 .send-btn--stop {
   background: linear-gradient(135deg, #dc2626, #ef4444);
   box-shadow: 0 4px 16px rgba(239, 68, 68, 0.3);
+}
+
+.send-btn--stop svg {
+  color: #ffffff;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
 }
 
 .send-btn--stop::after {
