@@ -5,6 +5,7 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Components } from 'react-markdown';
 import type { Message } from '../hooks/useChat.ts';
+import { FaRobot } from 'react-icons/fa';
 
 // Register only the languages needed for a cybersecurity context.
 // Using PrismLight + explicit registration keeps the bundle ~80 % smaller
@@ -269,7 +270,9 @@ export function StreamingBubble({ content, theme }: StreamingBubbleProps) {
 
   return (
     <div className="message ai">
-      <div className="avatar ai" aria-label="Cyber AI">🤖</div>
+      <div className="avatar ai" aria-label="Cyber AI">
+        <FaRobot size={18} />
+      </div>
       <div className="message-body">
         <div className="bubble bubble--ai bubble--streaming">
           <Markdown remarkPlugins={[remarkGfm]} components={components}>

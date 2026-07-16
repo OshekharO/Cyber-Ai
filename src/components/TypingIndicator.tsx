@@ -1,7 +1,11 @@
+import { FaRobot } from 'react-icons/fa';
+
 export function TypingIndicator() {
   return (
     <div className="typing-indicator" aria-label="Cyber AI is thinking" role="status">
-      <div className="avatar ai" aria-hidden="true">🤖</div>
+      <div className="avatar ai" aria-hidden="true">
+        <FaRobot size={18} />
+      </div>
       <div className="typing-bubble">
         <div className="skeleton-line skeleton-line--long" />
         <div className="skeleton-line skeleton-line--medium" />
