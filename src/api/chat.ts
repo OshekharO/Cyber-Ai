@@ -176,6 +176,11 @@ export async function streamChat(
     throw primaryError ?? classifyError(new Error('Network error'));
   }
 
+  // At this point, res must be defined and ok
+  if (!res) {
+    throw classifyError(new Error('Unexpected state: response is undefined'));
+  }
+
   const contentType = res.headers.get('content-type') ?? '';
 
   // --- Streaming SSE path ---
