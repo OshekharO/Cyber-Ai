@@ -1193,6 +1193,86 @@
   min-width: 120px;
 }
 
+/* ── Admin Pagination ── */
+.admin-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 16px 0 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 16px;
+}
+
+.admin-pagination-info {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.admin-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.admin-pagination-btn:hover:not(:disabled) {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.15);
+}
+
+.admin-pagination-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.admin-pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.admin-pagination-btn--active {
+  background: linear-gradient(135deg, var(--accent), #0080ff);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
+}
+
+.admin-pagination-btn--active:hover {
+  box-shadow: 0 6px 24px rgba(0, 212, 255, 0.45);
+  transform: translateY(-2px);
+}
+
+.admin-pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
 @media (max-width: 760px) {
   .auth-card,
   .admin-panel {
