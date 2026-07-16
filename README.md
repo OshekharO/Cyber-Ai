@@ -62,6 +62,8 @@ Set these environment variables locally and in Vercel:
 - `VITE_SUPABASE_URL` - Supabase project URL
 - `VITE_SUPABASE_ANON_KEY` - Supabase anonymous key
 - `VITE_SITE_URL` - Your site URL (optional)
+- `VITE_API_URL` - Primary AI API URL (optional, defaults to Render backend)
+- `VITE_BRAVE_API_TOKEN` - Brave Search API token for fallback (optional)
 - `SUPABASE_URL` - Supabase service role URL (for server-side operations)
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase service role key
 
