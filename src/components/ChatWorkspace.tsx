@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Header } from './Header.tsx';
 import { Sidebar } from './Sidebar.tsx';
 import { WelcomeScreen } from './WelcomeScreen.tsx';
@@ -18,6 +18,44 @@ interface ChatWorkspaceProps {
 export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignOut }: ChatWorkspaceProps) {
   const chat = useChat(userId);
   const [input, setInput] = useState('');
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyboardShortcuts = (e: KeyboardEvent) => {
+      const isMac = navigator.userAgent.toLowerCase().includes('mac');
+      const modifier = isMac ? e.metaKey : e.ctrlKey;
+
+      // Ctrl/Cmd + K - Toggle search
+      if (modifier && e.key === 'k') {
+        e.preventDefault();
+        if (!chat.searchOpen && chat.messages.length > 0) {
+          chat.toggleSearch();
+        } else if (chat.searchOpen) {
+          chat.toggleSearch();
+        }
+      }
+
+      // Ctrl/Cmd + Shift + N - New session
+      if (modifier && e.shiftKey && e.key === 'N') {
+        e.preventDefault();
+        chat.newSession();
+      }
+
+      // Ctrl/Cmd + Shift + L - Toggle theme
+      if (modifier && e.shiftKey && e.key === 'L') {
+        e.preventDefault();
+        chat.toggleTheme();
+      }
+
+      // Escape - Close search if open
+      if (e.key === 'Escape' && chat.searchOpen) {
+        chat.toggleSearch();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyboardShortcuts);
+    return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
+  }, [chat.searchOpen, chat.messages.length, chat.toggleSearch, chat.newSession, chat.toggleTheme]);
 
   const lastUserMessage = useMemo(() => [...chat.messages].reverse().find(m => m.role === 'user'), [chat.messages]);
 

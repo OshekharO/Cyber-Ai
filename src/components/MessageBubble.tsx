@@ -6,6 +6,7 @@ import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/pris
 import type { Components } from 'react-markdown';
 import type { Message } from '../hooks/useChat.ts';
 import { FaRobot } from 'react-icons/fa';
+import { FiCopy } from 'react-icons/fi';
 
 // Register only the languages needed for a cybersecurity context.
 // Using PrismLight + explicit registration keeps the bundle ~80 % smaller
@@ -221,7 +222,7 @@ function MessageBubbleInner({ message, isLast, theme, onFeedback, onRegenerate }
       </div>
 
       <div className="message-body">
-        <div className={`bubble${isUser ? ' bubble--user' : ' bubble--ai'}`}>
+        <div className={`bubble${isUser ? ' bubble--user' : ' bubble--ai'} bubble--with-copy`}>
           {isUser ? (
             <div className="user-text">{message.content}</div>
           ) : (
@@ -232,6 +233,16 @@ function MessageBubbleInner({ message, isLast, theme, onFeedback, onRegenerate }
               {message.content}
             </Markdown>
           )}
+          <button
+            className="copy-btn"
+            onClick={() => {
+              navigator.clipboard.writeText(message.content);
+            }}
+            aria-label="Copy message"
+            title="Copy message"
+          >
+            <FiCopy size={14} />
+          </button>
         </div>
 
         <div className={`message-footer${isUser ? ' message-footer--user' : ''}`}>
