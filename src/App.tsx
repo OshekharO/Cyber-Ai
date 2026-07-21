@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
 import { LandingPage } from './components/LandingPage.tsx';
+import { AuthScreen } from './components/AuthScreen.tsx';
 import { ChatWorkspace } from './components/ChatWorkspace.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { useAuth } from './hooks/useAuth.ts';
+import { supabaseConfigError } from './lib/supabase.ts';
 import './App.css';
 import './components/LandingPage.css';
 
@@ -48,6 +50,11 @@ export default function App() {
       setView('chat');
     }
   }, [auth.isAdmin, view]);
+
+  const goToLanding = () => {
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    setView('landing');
+  };
 
   const goToApp = () => {
     window.location.hash = 'app';
