@@ -1,17 +1,23 @@
 import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
+import { LandingPage } from './components/LandingPage.tsx';
 import { AuthScreen } from './components/AuthScreen.tsx';
 import { ChatWorkspace } from './components/ChatWorkspace.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { useAuth } from './hooks/useAuth.ts';
 import { supabaseConfigError } from './lib/supabase.ts';
 import './App.css';
+import './components/LandingPage.css';
 
 const WELCOME_SEEN_KEY = 'cyber-ai-welcome-seen';
 
 export default function App() {
   const auth = useAuth();
-  const [view, setView] = useState<'chat' | 'admin'>(() => window.location.hash === '#admin' ? 'admin' : 'chat');
+  const [view, setView] = useState<'landing' | 'chat' | 'admin'>(() => {
+    if (window.location.hash === '#admin') return 'admin';
+    if (window.location.hash === '#chat') return 'chat';
+    return 'landing';
+  });
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   useEffect(() => {
@@ -27,7 +33,11 @@ export default function App() {
   };
 
   useEffect(() => {
-    const syncView = () => setView(window.location.hash === '#admin' ? 'admin' : 'chat');
+    const syncView = () => {
+      if (window.location.hash === '#admin') setView('admin');
+      else if (window.location.hash === '#chat') setView('chat');
+      else setView('landing');
+    };
     window.addEventListener('hashchange', syncView);
     return () => window.removeEventListener('hashchange', syncView);
   }, []);
@@ -47,6 +57,11 @@ export default function App() {
   const backToChat = () => {
     window.history.replaceState(null, '', window.location.pathname + window.location.search);
     setView('chat');
+  };
+
+  const goToLanding = () => {
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    setView('landing');
   };
 
   const signOut = async () => {
@@ -75,6 +90,17 @@ export default function App() {
       </div>
     </div>
   ) : null;
+
+  // Show landing page for unauthenticated users or when explicitly requested
+  if (view === 'landing') {
+    return (
+      <>
+        {welcomeModal}
+        <LandingPage />
+        <Analytics />
+      </>
+    );
+  }
 
   if (auth.loading) {
     return (
@@ -132,6 +158,7 @@ export default function App() {
         isAdmin={auth.isAdmin}
         onOpenAdmin={openAdmin}
         onSignOut={signOut}
+        onGoToLanding={goToLanding}
       />
       <Analytics />
     </>
