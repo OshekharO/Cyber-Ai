@@ -16,10 +16,6 @@ export function LandingPage() {
     }
   }, [currentStep]);
 
-  const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   return (
     <div className="landing-page">
       {/* Hero Section */}
