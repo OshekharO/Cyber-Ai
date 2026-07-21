@@ -1,17 +1,24 @@
 import { useEffect, useState } from 'react';
 import { Analytics } from '@vercel/analytics/react';
+import { LandingPage } from './components/LandingPage.tsx';
 import { AuthScreen } from './components/AuthScreen.tsx';
 import { ChatWorkspace } from './components/ChatWorkspace.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
 import { useAuth } from './hooks/useAuth.ts';
 import { supabaseConfigError } from './lib/supabase.ts';
 import './App.css';
+import './components/LandingPage.css';
 
 const WELCOME_SEEN_KEY = 'cyber-ai-welcome-seen';
 
 export default function App() {
   const auth = useAuth();
-  const [view, setView] = useState<'chat' | 'admin'>(() => window.location.hash === '#admin' ? 'admin' : 'chat');
+  const [view, setView] = useState<'landing' | 'chat' | 'admin'>(() => {
+    const hash = window.location.hash;
+    if (hash === '#admin') return 'admin';
+    if (hash === '#app') return 'chat';
+    return 'landing';
+  });
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   useEffect(() => {
@@ -27,7 +34,12 @@ export default function App() {
   };
 
   useEffect(() => {
-    const syncView = () => setView(window.location.hash === '#admin' ? 'admin' : 'chat');
+    const syncView = () => {
+      const hash = window.location.hash;
+      if (hash === '#admin') setView('admin');
+      else if (hash === '#app') setView('chat');
+      else setView('landing');
+    };
     window.addEventListener('hashchange', syncView);
     return () => window.removeEventListener('hashchange', syncView);
   }, []);
@@ -38,6 +50,16 @@ export default function App() {
       setView('chat');
     }
   }, [auth.isAdmin, view]);
+
+  const goToLanding = () => {
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    setView('landing');
+  };
+
+  const goToApp = () => {
+    window.location.hash = 'app';
+    setView('chat');
+  };
 
   const openAdmin = () => {
     window.location.hash = 'admin';
@@ -76,6 +98,16 @@ export default function App() {
     </div>
   ) : null;
 
+  // Show landing page when not authenticated or explicitly on landing view
+  if (view === 'landing' || !auth.session) {
+    return (
+      <>
+        <LandingPage onGetStarted={goToApp} />
+        <Analytics />
+      </>
+    );
+  }
+
   if (auth.loading) {
     return (
       <>
@@ -86,22 +118,6 @@ export default function App() {
             <p>Loading secure workspace...</p>
           </div>
         </main>
-        <Analytics />
-      </>
-    );
-  }
-
-  if (!auth.session) {
-    return (
-      <>
-        {welcomeModal}
-        <AuthScreen
-          loading={auth.loading}
-          error={auth.error}
-          configError={auth.error === supabaseConfigError ? auth.error : null}
-          onSignIn={auth.signIn}
-          onSignUp={auth.signUp}
-        />
         <Analytics />
       </>
     );
