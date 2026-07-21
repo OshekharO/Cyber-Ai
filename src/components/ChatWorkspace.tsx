@@ -13,10 +13,9 @@ interface ChatWorkspaceProps {
   isAdmin: boolean;
   onOpenAdmin: () => void;
   onSignOut: () => void;
-  onGoToLanding?: () => void;
 }
 
-export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignOut, onGoToLanding }: ChatWorkspaceProps) {
+export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignOut }: ChatWorkspaceProps) {
   const chat = useChat(userId);
   const [input, setInput] = useState('');
 
@@ -90,7 +89,6 @@ export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignO
         onToggleSidebar={chat.toggleSidebar}
         onExport={chat.exportMarkdown}
         onClear={chat.clearMessages}
-        onGoToLanding={onGoToLanding}
       />
 
       {chat.searchOpen && (
