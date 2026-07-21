@@ -1,4 +1,4 @@
-import { FiMenu, FiShield, FiSearch, FiDownload, FiTrash2, FiSun, FiMoon } from 'react-icons/fi';
+import { FiMenu, FiShield, FiSearch, FiDownload, FiTrash2, FiSun, FiMoon, FiHome } from 'react-icons/fi';
 
 interface HeaderProps {
   theme: 'dark' | 'light';
@@ -11,6 +11,7 @@ interface HeaderProps {
   onToggleSidebar: () => void;
   onExport: () => void;
   onClear: () => void;
+  onGoToLanding?: () => void;
 }
 
 export function Header({
@@ -24,6 +25,7 @@ export function Header({
   onToggleSidebar,
   onExport,
   onClear,
+  onGoToLanding,
 }: HeaderProps) {
   return (
     <header className="header" role="banner">
@@ -46,6 +48,16 @@ export function Header({
       </div>
 
       <div className="header-actions">
+        {onGoToLanding && (
+          <button
+            className="header-icon-btn"
+            onClick={onGoToLanding}
+            aria-label="Go to landing page"
+            title="Go to landing page"
+          >
+            <FiHome size={18} />
+          </button>
+        )}
 
         {hasMessages && (
           <>
