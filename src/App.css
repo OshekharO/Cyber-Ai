@@ -827,9 +827,16 @@
   width: min(100%, 1240px);
   padding: 28px;
   border-radius: 20px;
+  border: 1px solid var(--border);
+  background: rgba(17, 24, 39, 0.92);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="light"] .admin-panel {
   color: black;
   background: white;
-  border: 1px solid var(--border);
+  backdrop-filter: none;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
 }
 
