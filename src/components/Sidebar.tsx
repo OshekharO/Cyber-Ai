@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings } from 'react-icons/fi';
+import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings, FiSun, FiMoon, FiAlertTriangle } from 'react-icons/fi';
 import type { Session } from '../hooks/useChat.ts';
 import { UserProfileModal } from './UserProfileModal.tsx';
 
@@ -15,12 +15,12 @@ interface SidebarProps {
   userEmail?: string;
   userAvatar?: string;
   isAdmin?: boolean;
-  theme: 'light' | 'dark';
+  theme?: 'light' | 'dark';
   onOpenAdmin?: () => void;
-  onSignOut: () => void;
-  onToggleTheme: () => void;
-  onClearStorage: () => void;
-  onDeleteAccount: () => void;
+  onSignOut?: () => void;
+  onToggleTheme?: () => void;
+  onClearStorage?: () => void;
+  onDeleteAccount?: () => void;
 }
 
 export function Sidebar({ 
