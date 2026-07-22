@@ -1,12 +1,10 @@
-import { FiMenu, FiShield, FiSearch, FiDownload, FiTrash2, FiSun, FiMoon } from 'react-icons/fi';
+import { FiMenu, FiShield, FiSearch, FiDownload, FiTrash2 } from 'react-icons/fi';
 
 interface HeaderProps {
-  theme: 'dark' | 'light';
   searchOpen: boolean;
   loading: boolean;
   hasMessages: boolean;
   sidebarOpen: boolean;
-  onToggleTheme: () => void;
   onToggleSearch: () => void;
   onToggleSidebar: () => void;
   onExport: () => void;
@@ -14,12 +12,10 @@ interface HeaderProps {
 }
 
 export function Header({
-  theme,
   searchOpen,
   loading,
   hasMessages,
   sidebarOpen,
-  onToggleTheme,
   onToggleSearch,
   onToggleSidebar,
   onExport,
@@ -78,15 +74,6 @@ export function Header({
             </button>
           </>
         )}
-
-        <button
-          className="header-icon-btn"
-          onClick={onToggleTheme}
-          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        >
-          {theme === 'dark' ? <FiSun size={18} /> : <FiMoon size={18} />}
-        </button>
 
         <div className="header-status" aria-live="polite" aria-label={loading ? 'Processing' : 'Online'}>
           <div className={`status-dot${loading ? ' status-dot--busy' : ''}`} aria-hidden="true" />

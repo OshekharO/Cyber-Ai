@@ -79,12 +79,10 @@ export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignO
   return (
     <div className={`app${chat.sidebarOpen ? ' app--sidebar-open' : ''}`}>
       <Header
-        theme={chat.theme}
         searchOpen={chat.searchOpen}
         loading={chat.loading}
         hasMessages={chat.messages.length > 0}
         sidebarOpen={chat.sidebarOpen}
-        onToggleTheme={chat.toggleTheme}
         onToggleSearch={chat.toggleSearch}
         onToggleSidebar={chat.toggleSidebar}
         onExport={chat.exportMarkdown}
