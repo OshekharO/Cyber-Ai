@@ -1,4 +1,4 @@
-import type { CveResponse } from '../api/cve.ts';
+import { CveResponse } from '../api/cve.ts';
 
 interface CveCardProps {
   data: CveResponse;

@@ -4,8 +4,7 @@ import { TypingIndicator } from './TypingIndicator.tsx';
 import { ErrorBanner } from './ErrorBanner.tsx';
 import { CveCard } from './CveCard.tsx';
 import type { Message } from '../hooks/useChat.ts';
-import type { ChatError } from '../api/chat.ts';
-import type { CveResponse } from '../api/cve.ts';
+import type { ChatError, CveResponse } from '../api/chat.ts';
 
 interface MessageListProps {
   messages: Message[];
