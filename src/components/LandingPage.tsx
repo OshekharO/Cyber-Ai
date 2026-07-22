@@ -197,14 +197,32 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       {/* Footer */}
       <footer className="landing-footer">
         <div className="landing-footer-inner">
-          <div className="landing-footer-brand">
-            <div className="landing-logo" aria-hidden="true">
-              <FiShield size={18} />
+          <div className="landing-footer-col">
+            <div className="landing-footer-brand">
+              <div className="landing-logo" aria-hidden="true">
+                <FiShield size={20} />
+              </div>
+              <span className="landing-footer-brand-name">Cyber AI</span>
             </div>
-            <span>Cyber AI</span>
+            <p className="landing-footer-tagline">Elite cybersecurity assistant for professionals, students, and enthusiasts.</p>
           </div>
-          <p className="landing-footer-copy">Educational purposes only. Always hack responsibly.</p>
-          <p className="landing-footer-copy">Built by <strong>Saksham Shekher</strong> and <strong>Ayan Kar</strong></p>
+
+          <div className="landing-footer-col">
+            <h4 className="landing-footer-heading">Product</h4>
+            <a href="#features" className="landing-footer-link" onClick={() => setMenuOpen(false)}>Features</a>
+            <a href="#how-it-works" className="landing-footer-link" onClick={() => setMenuOpen(false)}>How it works</a>
+            <a href="#use-cases" className="landing-footer-link" onClick={() => setMenuOpen(false)}>Use cases</a>
+          </div>
+
+          <div className="landing-footer-col">
+            <h4 className="landing-footer-heading">Legal</h4>
+            <p className="landing-footer-legal">Educational purposes only. Always hack responsibly.</p>
+            <p className="landing-footer-legal">Built by <strong>Saksham Shekher</strong> and <strong>Ayan Kar</strong></p>
+          </div>
+        </div>
+
+        <div className="landing-footer-bottom">
+          <p>&copy; {new Date().getFullYear()} Cyber AI. All rights reserved.</p>
         </div>
       </footer>
     </div>
