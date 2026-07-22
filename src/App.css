@@ -813,8 +813,7 @@
   background: linear-gradient(180deg, rgba(10, 14, 26, 0.82), rgba(10, 14, 26, 0.96));
 }
 
-.auth-card,
-.admin-panel {
+.auth-card {
   width: min(100%, 540px);
   padding: 28px;
   border-radius: 24px;
@@ -826,6 +825,12 @@
 
 .admin-panel {
   width: min(100%, 1240px);
+  padding: 28px;
+  border-radius: 20px;
+  color: black;
+  background: white;
+  border: 1px solid var(--border);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
 }
 
 .auth-brand-block {
