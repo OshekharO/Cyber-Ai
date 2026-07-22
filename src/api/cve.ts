@@ -39,6 +39,8 @@ export interface CveCvssData {
   confidentialityImpact: string;
   integrityImpact: string;
   availabilityImpact: string;
+  exploitabilityScore?: number;
+  impactScore?: number;
 }
 
 export interface CveMetric {
