@@ -115,6 +115,7 @@ export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignO
           onToggleTheme={chat.toggleTheme}
           onClearLocalStorage={chat.clearAllData}
           onDeleteAccount={() => { chat.clearAllData(); onSignOut(); }}
+          onRename={chat.renameSession}
         />
 
         <div className="chat-container">

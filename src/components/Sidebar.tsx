@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings, FiSun, FiMoon, FiDatabase } from 'react-icons/fi';
+import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings, FiSun, FiMoon, FiDatabase, FiEdit2 } from 'react-icons/fi';
 import type { Session } from '../hooks/useChat.ts';
 
 interface SidebarProps {
@@ -18,6 +18,7 @@ interface SidebarProps {
   onToggleTheme?: () => void;
   onClearLocalStorage?: () => void;
   onDeleteAccount?: () => void;
+  onRename?: (id: string, name: string) => void;
 }
 
 export function Sidebar({ 
@@ -35,9 +36,41 @@ export function Sidebar({
   theme,
   onToggleTheme,
   onClearLocalStorage,
-  onDeleteAccount
+  onDeleteAccount,
+  onRename
 }: SidebarProps) {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+
+  useEffect(() => {
+    if (!showShortcuts) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowShortcuts(false);
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [showShortcuts]);
+
+  const startRename = (session: Session) => {
+    if (!onRename) return;
+    setRenamingId(session.id);
+    setRenameValue(session.name);
+  };
+
+  const commitRename = () => {
+    if (renamingId && renameValue.trim() && onRename) {
+      onRename(renamingId, renameValue.trim());
+    }
+    setRenamingId(null);
+    setRenameValue('');
+  };
+
+  const cancelRename = () => {
+    setRenamingId(null);
+    setRenameValue('');
+  };
 
   return (
     <>
@@ -47,9 +80,14 @@ export function Sidebar({
       <aside className={`sidebar${open ? ' sidebar--open' : ''}`} aria-label="Chat sessions">
         <div className="sidebar-header">
           <span className="sidebar-title">Sessions</span>
-          <button className="sidebar-close-btn" onClick={onClose} aria-label="Close sidebar">
-            <FiX size={16} />
-          </button>
+          <div className="sidebar-header-actions">
+            <button className="sidebar-help-btn" onClick={() => setShowShortcuts(true)} aria-label="Keyboard shortcuts" title="Keyboard shortcuts">
+              ?
+            </button>
+            <button className="sidebar-close-btn" onClick={onClose} aria-label="Close sidebar">
+              <FiX size={16} />
+            </button>
+          </div>
         </div>
 
         <button className="new-chat-btn" onClick={onNew} aria-label="New chat">
@@ -63,23 +101,51 @@ export function Sidebar({
               className={`session-item${session.id === activeSessionId ? ' session-item--active' : ''}`}
               role="listitem"
             >
-              <button
-                className="session-name-btn"
-                onClick={() => onSwitch(session.id)}
-                aria-current={session.id === activeSessionId ? 'page' : undefined}
-                title={session.name}
-              >
-                <FiMessageSquare className="session-icon" size={18} />
-                <span className="session-name">{session.name}</span>
-              </button>
-              <button
-                className="session-delete-btn"
-                onClick={(e) => { e.stopPropagation(); onDelete(session.id); }}
-                aria-label={`Delete session "${session.name}"`}
-                title="Delete"
-              >
-                <FiTrash2 size={16} />
-              </button>
+              {renamingId === session.id ? (
+                <input
+                  className="session-rename-input"
+                  type="text"
+                  value={renameValue}
+                  onChange={e => setRenameValue(e.target.value)}
+                  onBlur={commitRename}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') { e.preventDefault(); commitRename(); }
+                    if (e.key === 'Escape') { e.preventDefault(); cancelRename(); }
+                  }}
+                  autoFocus
+                  maxLength={60}
+                />
+              ) : (
+                <>
+                  <button
+                    className="session-name-btn"
+                    onClick={() => onSwitch(session.id)}
+                    title="Double-click to rename"
+                    onDoubleClick={() => startRename(session)}
+                  >
+                    <FiMessageSquare className="session-icon" size={18} />
+                    <span className="session-name">{session.name}</span>
+                  </button>
+                  {onRename && (
+                    <button
+                      className="session-rename-btn"
+                      onClick={(e) => { e.stopPropagation(); startRename(session); }}
+                      aria-label={`Rename session "${session.name}"`}
+                      title="Rename"
+                    >
+                      <FiEdit2 size={14} />
+                    </button>
+                  )}
+                  <button
+                    className="session-delete-btn"
+                    onClick={(e) => { e.stopPropagation(); onDelete(session.id); }}
+                    aria-label={`Delete session "${session.name}"`}
+                    title="Delete"
+                  >
+                    <FiTrash2 size={16} />
+                  </button>
+                </>
+              )}
             </div>
           ))}
         </nav>
@@ -125,6 +191,40 @@ export function Sidebar({
           </div>
         )}
       </aside>
+
+      {/* Keyboard shortcuts modal */}
+      {showShortcuts && (
+        <div className="shortcuts-overlay" onClick={() => setShowShortcuts(false)}>
+          <div className="shortcuts-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="shortcuts-header">
+              <h2 className="shortcuts-title">Keyboard Shortcuts</h2>
+              <button className="shortcuts-close" onClick={() => setShowShortcuts(false)} aria-label="Close">✕</button>
+            </div>
+            <div className="shortcuts-body">
+              <div className="shortcut-item">
+                <kbd>Ctrl + K</kbd>
+                <span>Search messages</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Ctrl + Shift + N</kbd>
+                <span>New chat</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Ctrl + Shift + L</kbd>
+                <span>Toggle theme</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Escape</kbd>
+                <span>Close search</span>
+              </div>
+              <div className="shortcut-item">
+                <kbd>Double-click session</kbd>
+                <span>Rename session</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Profile menu modal */}
       {showProfileMenu && (
