@@ -26,6 +26,11 @@ export interface CveAffected {
   versions: CveAffectedVersion[];
 }
 
+export interface CveAffectedWrapper {
+  source: string;
+  affectedData: CveAffected[];
+}
+
 export interface CveCvssData {
   version: string;
   vectorString: string;
@@ -61,7 +66,7 @@ export interface CveResponse {
   published: string;
   lastModified: string;
   descriptions: CveDescription[];
-  affected: CveAffected[];
+  affected: CveAffectedWrapper[];
   metrics: {
     cvssMetricV31?: CveMetric[];
     cvssMetricV2?: CveMetric[];
