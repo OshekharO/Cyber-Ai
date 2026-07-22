@@ -952,22 +952,25 @@
   border-radius: 12px;
   border: 1px solid var(--border);
   background: rgba(17, 24, 39, 0.76);
+  color: #e2e8f0;
 }
 
 .auth-alert,
 .admin-error {
-  color: #fca5a5;
   border-color: rgba(239, 68, 68, 0.3);
 }
 
-[data-theme="light"] .admin-notice,
-[data-theme="light"] .admin-error {
-  background: rgba(248, 250, 252, 0.95);
+[data-theme="light"] .admin-notice {
+  color: #f1f5f9;
 }
 
 [data-theme="light"] .admin-error {
-  border-color: rgba(239, 68, 68, 0.25);
-  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+[data-theme="light"] .admin-kicker {
+  color: #059669;
 }
 
 /* ── Toast notifications ── */
