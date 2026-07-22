@@ -113,6 +113,10 @@ export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignO
           isAdmin={isAdmin}
           onOpenAdmin={onOpenAdmin}
           onSignOut={onSignOut}
+          theme={chat.theme}
+          onToggleTheme={chat.toggleTheme}
+          onClearLocalStorage={chat.clearAllData}
+          onDeleteAccount={() => { chat.clearAllData(); onSignOut(); }}
         />
 
         <div className="chat-container">

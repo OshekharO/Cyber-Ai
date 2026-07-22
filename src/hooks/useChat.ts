@@ -2,29 +2,6 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { streamChat } from '../api/chat.ts';
 import type { ChatMessage, ChatError } from '../api/chat.ts';
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
-export interface Message {
-  id: number;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: string; // ISO string
-  feedback?: 'up' | 'down' | null;
-}
-
-export interface Session {
-  id: string;
-  name: string;
-  messages: Message[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-// ── Constants ────────────────────────────────────────────────────────────────
-
-const STORAGE_KEY = 'cyber-ai-v2';
-const THEME_KEY = 'cyber-ai-theme';
-
 export const SYSTEM_PROMPT = `You are Cyber AI, an elite cybersecurity assistant with decades of combined expertise \
 across offensive security, defensive operations, threat intelligence, and full-stack engineering. \
 You assist security professionals, developers, students, and enthusiasts with:
@@ -53,6 +30,29 @@ Personality & communication style:
 - If a question is ambiguous, ask one focused clarifying question before answering
 
 Always respond in the same language the user writes in.`;
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+export interface Message {
+  id: number;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: string;
+  feedback?: 'up' | 'down' | null;
+}
+
+export interface Session {
+  id: string;
+  name: string;
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Constants ────────────────────────────────────────────────────────────────
+
+const STORAGE_KEY = 'cyber-ai-v2';
+const THEME_KEY = 'cyber-ai-theme';
 
 // ── Persistence helpers ───────────────────────────────────────────────────────
 
@@ -301,6 +301,24 @@ export function useChat(storageScope = 'global') {
     setTheme(t => t === 'dark' ? 'light' : 'dark');
   }, []);
 
+  const clearAllData = useCallback(() => {
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(`${STORAGE_KEY}:${storageScope === 'global' ? 'user' : 'global'}`);
+    localStorage.removeItem(THEME_KEY);
+    localStorage.removeItem('cyber-ai-welcome-seen');
+    const fresh = createSession();
+    setSessions([fresh]);
+    setActiveSessionId(fresh.id);
+    setLoading(false);
+    setStreamingContent('');
+    setError(null);
+    setSearchQuery('');
+    setSearchOpen(false);
+    setSidebarOpen(false);
+    setTheme('dark');
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }, [storageKey, storageScope]);
+
   // -- Search
 
   const toggleSearch = useCallback(() => {
@@ -362,6 +380,7 @@ export function useChat(storageScope = 'global') {
     setFeedback,
     // UI actions
     toggleTheme,
+    clearAllData,
     toggleSearch,
     setSearchQuery,
     toggleSidebar,
