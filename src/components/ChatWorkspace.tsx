@@ -133,6 +133,8 @@ export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignO
               onRegenerate={chat.regenerate}
               onRetry={handleRetry}
               onDismissError={() => chat.setError(null)}
+              cveResult={chat.cveResult}
+              cveLoading={chat.cveLoading}
             />
           )}
 
@@ -143,6 +145,7 @@ export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignO
             onSend={handleSend}
             onStop={chat.stopGenerating}
             onClear={chat.clearMessages}
+            onCveLookup={chat.lookupCve}
           />
         </div>
       </div>

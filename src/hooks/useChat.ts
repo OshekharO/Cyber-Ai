@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { streamChat } from '../api/chat.ts';
 import type { ChatMessage, ChatError } from '../api/chat.ts';
+import type { CveResponse } from '../api/cve.ts';
 
 export const SYSTEM_PROMPT = `You are Cyber AI, an elite cybersecurity assistant with decades of combined expertise \
 across offensive security, defensive operations, threat intelligence, and full-stack engineering. \
@@ -118,6 +119,8 @@ export function useChat(storageScope = 'global') {
   const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState<ChatError | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(loadTheme);
+  const [cveResult, setCveResult] = useState<CveResponse | null>(null);
+  const [cveLoading, setCveLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -312,12 +315,31 @@ export function useChat(storageScope = 'global') {
     setLoading(false);
     setStreamingContent('');
     setError(null);
+    setCveResult(null);
+    setCveLoading(false);
     setSearchQuery('');
     setSearchOpen(false);
     setSidebarOpen(false);
     setTheme('dark');
     document.documentElement.setAttribute('data-theme', 'dark');
   }, [storageKey, storageScope]);
+
+  const lookupCve = useCallback(async (cveId: string) => {
+    setError(null);
+    setCveLoading(true);
+    setCveResult(null);
+    try {
+      const { lookupCve: fetchCve } = await import('../api/cve.ts');
+      const result = await fetchCve(cveId.trim().toUpperCase());
+      setCveResult(result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'CVE lookup failed.';
+      setError({ message: msg, kind: 'network' });
+      setCveResult(null);
+    } finally {
+      setCveLoading(false);
+    }
+  }, []);
 
   // -- Search
 
@@ -364,6 +386,8 @@ export function useChat(storageScope = 'global') {
     streamingContent,
     error,
     theme,
+    cveResult,
+    cveLoading,
     searchQuery,
     searchOpen,
     sidebarOpen,
@@ -380,6 +404,7 @@ export function useChat(storageScope = 'global') {
     setFeedback,
     // UI actions
     toggleTheme,
+    lookupCve,
     clearAllData,
     toggleSearch,
     setSearchQuery,
