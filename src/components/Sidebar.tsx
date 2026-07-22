@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings, FiSun, FiMoon, FiDatabase, FiEdit2 } from 'react-icons/fi';
 import type { Session } from '../hooks/useChat.ts';
 
