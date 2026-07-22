@@ -10,7 +10,7 @@ import './App.css';
 
 const WELCOME_SEEN_KEY = 'cyber-ai-welcome-seen';
 
-type View = 'landing' | 'chat' | 'admin';
+type View = 'landing' | 'chat' | 'admin' | 'auth';
 
 export default function App() {
   const auth = useAuth();
