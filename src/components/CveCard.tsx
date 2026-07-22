@@ -35,11 +35,9 @@ export function CveCard({ data, theme }: CveCardProps) {
       <div className="cve-grid">
         <div className="cve-block">
           <h4>Affected</h4>
-          {data.affected.map((wrapper, i) =>
-            wrapper.affectedData.map((a, j) => (
-              <p key={`${i}-${j}`} className="cve-text">{a.vendor} — {a.product}</p>
-            ))
-          )}
+          {data.affected.map((a, i) => (
+            <p key={i} className="cve-text">{a.vendor} — {a.product}</p>
+          ))}
         </div>
 
         {primaryCvss && (
