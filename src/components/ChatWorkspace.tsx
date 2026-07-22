@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Header } from './Header.tsx';
 import { Sidebar } from './Sidebar.tsx';
 import { WelcomeScreen } from './WelcomeScreen.tsx';
@@ -10,32 +10,14 @@ import { useChat } from '../hooks/useChat.ts';
 interface ChatWorkspaceProps {
   userId: string;
   userLabel: string;
-  userEmail?: string;
   isAdmin: boolean;
   onOpenAdmin: () => void;
   onSignOut: () => void;
-  onDeleteAccount?: () => void;
 }
 
-export function ChatWorkspace({ userId, userLabel, userEmail, isAdmin, onOpenAdmin, onSignOut, onDeleteAccount }: ChatWorkspaceProps) {
+export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignOut }: ChatWorkspaceProps) {
   const chat = useChat(userId);
   const [input, setInput] = useState('');
-
-  // Clear all localStorage data (chat sessions, theme, etc.)
-  const handleClearStorage = useCallback(() => {
-    if (window.confirm('This will clear all local data including chat history and preferences. Continue?')) {
-      localStorage.clear();
-      // Reload to reset state
-      window.location.reload();
-    }
-  }, []);
-
-  // Delete account - calls the provided callback
-  const handleDeleteAccount = useCallback(() => {
-    if (onDeleteAccount) {
-      onDeleteAccount();
-    }
-  }, [onDeleteAccount]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -128,14 +110,9 @@ export function ChatWorkspace({ userId, userLabel, userEmail, isAdmin, onOpenAdm
           onDelete={chat.deleteSession}
           onClose={() => chat.setSidebarOpen(false)}
           userLabel={userLabel}
-          userEmail={userEmail}
           isAdmin={isAdmin}
-          theme={chat.theme}
-          onToggleTheme={chat.toggleTheme}
           onOpenAdmin={onOpenAdmin}
           onSignOut={onSignOut}
-          onClearStorage={handleClearStorage}
-          onDeleteAccount={handleDeleteAccount}
         />
 
         <div className="chat-container">

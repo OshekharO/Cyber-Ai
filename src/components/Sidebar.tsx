@@ -1,7 +1,5 @@
-import { useState } from 'react';
-import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings, FiSun, FiMoon, FiAlertTriangle } from 'react-icons/fi';
+import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings } from 'react-icons/fi';
 import type { Session } from '../hooks/useChat.ts';
-import { UserProfileModal } from './UserProfileModal.tsx';
 
 interface SidebarProps {
   sessions: Session[];
@@ -12,15 +10,9 @@ interface SidebarProps {
   onDelete: (id: string) => void;
   onClose: () => void;
   userLabel?: string;
-  userEmail?: string;
-  userAvatar?: string;
   isAdmin?: boolean;
-  theme?: 'light' | 'dark';
   onOpenAdmin?: () => void;
   onSignOut?: () => void;
-  onToggleTheme?: () => void;
-  onClearStorage?: () => void;
-  onDeleteAccount?: () => void;
 }
 
 export function Sidebar({ 
@@ -32,18 +24,10 @@ export function Sidebar({
   onDelete, 
   onClose,
   userLabel,
-  userEmail,
-  userAvatar,
   isAdmin,
-  theme = 'dark',
   onOpenAdmin,
-  onSignOut,
-  onToggleTheme,
-  onClearStorage,
-  onDeleteAccount
+  onSignOut 
 }: SidebarProps) {
-  const [showProfileModal, setShowProfileModal] = useState(false);
-
   return (
     <>
       {/* Mobile backdrop */}
@@ -95,15 +79,11 @@ export function Sidebar({
             {userLabel && (
               <button
                 className="sidebar-profile-btn"
-                onClick={() => setShowProfileModal(true)}
                 title={`Profile: ${userLabel}`}
                 aria-label="User profile"
-                aria-expanded={showProfileModal}
-                aria-haspopup="dialog"
               >
                 <FiUser size={20} />
                 <span>{userLabel}</span>
-                <FiSettings size={14} className="sidebar-profile-chevron" />
               </button>
             )}
             
@@ -131,24 +111,6 @@ export function Sidebar({
               </button>
             )}
           </div>
-        )}
-
-        {/* User Profile Modal */}
-        {userLabel && (
-          <UserProfileModal
-            isOpen={showProfileModal}
-            onClose={() => setShowProfileModal(false)}
-            userLabel={userLabel}
-            userEmail={userEmail}
-            userAvatar={userAvatar}
-            isAdmin={isAdmin || false}
-            theme={theme}
-            onToggleTheme={onToggleTheme}
-            onOpenAdmin={onOpenAdmin}
-            onSignOut={onSignOut}
-            onClearStorage={onClearStorage}
-            onDeleteAccount={onDeleteAccount}
-          />
         )}
       </aside>
     </>
