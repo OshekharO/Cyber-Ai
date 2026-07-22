@@ -44,15 +44,23 @@ export function InputBar({ input, loading, onChange, onSend, onStop, onClear, on
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      if (input.trim() && !loading) {
-        handleSend(input);
+      const trimmed = input.trim();
+      if (trimmed && !loading) {
+        const cveMatch = trimmed.match(/^\/cve\s+(\S+)/i);
+        if (cveMatch && onCveLookup) {
+          onCveLookup(cveMatch[1]);
+          onChange('');
+          if (textareaRef.current) textareaRef.current.style.height = 'auto';
+          return;
+        }
+        handleSend(trimmed);
       }
     }
     // Escape closes paste confirm
     if (e.key === 'Escape') {
       setPasteConfirm(null);
     }
-  }, [input, loading, handleSend]);
+  }, [input, loading, handleSend, onChange, onCveLookup]);
 
   // Paste detection
   const handlePaste = useCallback((e: React.ClipboardEvent<HTMLTextAreaElement>) => {
