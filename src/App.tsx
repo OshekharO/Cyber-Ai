@@ -54,6 +54,33 @@ export default function App() {
     backToChat();
   };
 
+  const handleDeleteAccount = async () => {
+    if (auth.session?.access_token) {
+      try {
+        // Call Supabase to delete the user account
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/user`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${auth.session.access_token}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY || '',
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete account');
+        }
+        
+        // Sign out after successful deletion
+        await auth.signOut();
+        backToChat();
+      } catch (error) {
+        console.error('Failed to delete account:', error);
+        alert('Failed to delete account. Please try again.');
+      }
+    }
+  };
+
   const welcomeModal = showWelcomeModal ? (
     <div className="welcome-modal-overlay" onClick={dismissWelcomeModal}>
       <div className="welcome-modal" onClick={(e) => e.stopPropagation()}>
@@ -129,9 +156,11 @@ export default function App() {
       <ChatWorkspace
         userId={auth.user?.id ?? 'guest'}
         userLabel={auth.profile?.full_name ?? (auth.user?.user_metadata.full_name as string | undefined) ?? (auth.user?.user_metadata.name as string | undefined) ?? auth.user?.email?.split('@')[0] ?? 'Account'}
+        userEmail={auth.user?.email}
         isAdmin={auth.isAdmin}
         onOpenAdmin={openAdmin}
         onSignOut={signOut}
+        onDeleteAccount={handleDeleteAccount}
       />
       <Analytics />
     </>
