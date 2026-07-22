@@ -10,10 +10,9 @@ interface InputBarProps {
   onSend: (text: string) => void;
   onStop: () => void;
   onClear: () => void;
-  onCveLookup?: (cveId: string) => void;
 }
 
-export function InputBar({ input, loading, onChange, onSend, onStop, onClear, onCveLookup }: InputBarProps) {
+export function InputBar({ input, loading, onChange, onSend, onStop, onClear }: InputBarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [pasteConfirm, setPasteConfirm] = useState<{ text: string } | null>(null);
 
@@ -79,11 +78,7 @@ export function InputBar({ input, loading, onChange, onSend, onStop, onClear, on
       onChange('');
       onClear();
     }
-    const cveMatch = cmd.match(/^\/cve\s+(\S+)/i);
-    if (cveMatch && onCveLookup) {
-      onCveLookup(cveMatch[1]);
-    }
-  }, [onChange, onClear, onCveLookup]);
+  }, [onChange, onClear]);
 
   const charCount = input.length;
   const isOverLimit = charCount > 4000;

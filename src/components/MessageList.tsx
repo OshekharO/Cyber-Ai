@@ -2,9 +2,8 @@ import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { MessageBubble, StreamingBubble } from './MessageBubble.tsx';
 import { TypingIndicator } from './TypingIndicator.tsx';
 import { ErrorBanner } from './ErrorBanner.tsx';
-import { CveCard } from './CveCard.tsx';
 import type { Message } from '../hooks/useChat.ts';
-import type { ChatError, CveResponse } from '../api/chat.ts';
+import type { ChatError } from '../api/chat.ts';
 
 interface MessageListProps {
   messages: Message[];
@@ -17,8 +16,6 @@ interface MessageListProps {
   onRegenerate: () => void;
   onRetry: () => void;
   onDismissError: () => void;
-  cveResult: CveResponse | null;
-  cveLoading: boolean;
 }
 
 export function MessageList({
@@ -32,8 +29,6 @@ export function MessageList({
   onRegenerate,
   onRetry,
   onDismissError,
-  cveResult,
-  cveLoading,
 }: MessageListProps) {
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -100,9 +95,6 @@ export function MessageList({
           />
         );
       })}
-
-      {cveLoading && <div className="cve-loading">Looking up CVE...</div>}
-      {cveResult && !cveLoading && <CveCard data={cveResult} theme={theme} />}
 
       {loading && !streamingContent && <TypingIndicator />}
       {loading && streamingContent && <StreamingBubble content={streamingContent} theme={theme} />}
