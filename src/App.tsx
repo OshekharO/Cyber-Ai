@@ -3,15 +3,18 @@ import { Analytics } from '@vercel/analytics/react';
 import { AuthScreen } from './components/AuthScreen.tsx';
 import { ChatWorkspace } from './components/ChatWorkspace.tsx';
 import { AdminDashboard } from './components/AdminDashboard.tsx';
+import { LandingPage } from './components/LandingPage.tsx';
 import { useAuth } from './hooks/useAuth.ts';
 import { supabaseConfigError } from './lib/supabase.ts';
 import './App.css';
 
 const WELCOME_SEEN_KEY = 'cyber-ai-welcome-seen';
 
+type View = 'landing' | 'chat' | 'admin';
+
 export default function App() {
   const auth = useAuth();
-  const [view, setView] = useState<'chat' | 'admin'>(() => window.location.hash === '#admin' ? 'admin' : 'chat');
+  const [view, setView] = useState<View>(() => window.location.hash === '#admin' ? 'admin' : (window.location.hash === '#auth' ? 'auth' : 'landing'));
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
 
   useEffect(() => {
@@ -27,7 +30,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    const syncView = () => setView(window.location.hash === '#admin' ? 'admin' : 'chat');
+    const syncView = () => setView(window.location.hash === '#admin' ? 'admin' : (window.location.hash === '#auth' ? 'auth' : 'landing'));
     window.addEventListener('hashchange', syncView);
     return () => window.removeEventListener('hashchange', syncView);
   }, []);
@@ -35,13 +38,18 @@ export default function App() {
   useEffect(() => {
     if (!auth.isAdmin && view === 'admin') {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      setView('chat');
+      setView('landing');
     }
   }, [auth.isAdmin, view]);
 
   const openAdmin = () => {
     window.location.hash = 'admin';
     setView('admin');
+  };
+
+  const openAuth = () => {
+    window.location.hash = 'auth';
+    setView('auth');
   };
 
   const backToChat = () => {
@@ -95,13 +103,17 @@ export default function App() {
     return (
       <>
         {welcomeModal}
-        <AuthScreen
-          loading={auth.loading}
-          error={auth.error}
-          configError={auth.error === supabaseConfigError ? auth.error : null}
-          onSignIn={auth.signIn}
-          onSignUp={auth.signUp}
-        />
+        {view === 'auth' ? (
+          <AuthScreen
+            loading={auth.loading}
+            error={auth.error}
+            configError={auth.error === supabaseConfigError ? auth.error : null}
+            onSignIn={auth.signIn}
+            onSignUp={auth.signUp}
+          />
+        ) : (
+          <LandingPage onGetStarted={openAuth} />
+        )}
         <Analytics />
       </>
     );
