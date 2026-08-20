@@ -1,0 +1,24 @@
+@startuml
+title Cyber AI - Auth Collaboration Diagram
+
+actor "User" as User
+rectangle "ChatWorkspace" as UI
+rectangle "useAuth" as Auth
+database "Supabase" as DB
+
+User -> UI : 1: open app
+UI -> Auth : 2: get session
+Auth --> UI : 3: session token
+
+User -> UI : 4: sign out
+UI -> Auth : 5: signOut()
+Auth -> DB : 6: logout
+DB --> Auth : 7: ok
+Auth --> UI : 8: session cleared
+UI --> User : 9: redirect to login
+
+note right of Auth
+  Session management and
+  persistence are handled here.
+end note
+@enduml

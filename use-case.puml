@@ -1,0 +1,61 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor "User" as User <<human>>
+actor "Admin" as Admin <<human>>
+User <|-- Admin
+
+actor "AI Chat Service" as AI <<system>>
+actor "Brave Search API" as Brave <<system>>
+
+rectangle "Authentication" {
+  (Sign in) as SignIn
+  (Register account) as SignUp
+  (Sign out) as SignOut
+}
+
+rectangle "Chat" {
+  (Send chat message) as SendMsg
+  (Search messages) as Search
+  (Run chat command) as Command
+  (Manage chat sessions) as Sessions
+  (Toggle theme) as Theme
+}
+
+rectangle "Landing" {
+  (Browse landing page) as BrowseLanding
+}
+
+rectangle "Administration" {
+  (View user list) as ListUsers
+  (Filter / search users) as FilterUsers
+  (View user stats) as Stats
+  (Change user role) as ChangeRole
+  (Delete user) as DeleteUser
+}
+
+' ---- User flows ----
+User --> SignIn
+User --> SignUp
+User --> SignOut
+User --> SendMsg
+User --> Search
+User --> Command
+User --> Sessions
+User --> Theme
+User --> BrowseLanding
+
+SendMsg --> AI
+SendMsg --> Brave : fallback
+
+' ---- Admin flows (Admin inherits all User use cases) ----
+Admin --> ListUsers
+Admin --> FilterUsers
+Admin --> Stats
+Admin --> ChangeRole
+Admin --> DeleteUser
+
+ListUsers .> FilterUsers : includes
+ListUsers .> Stats : includes
+@enduml

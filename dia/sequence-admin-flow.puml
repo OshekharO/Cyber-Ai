@@ -1,0 +1,53 @@
+@startuml
+title Cyber AI - Admin User Management Sequence
+
+actor Admin
+participant "AdminDashboard" as UI
+participant "useAuth.ts" as Auth
+participant "API Routes" as API
+database "Supabase DB" as DB
+
+== Access admin view ==
+Admin -> UI : navigate to admin hash
+UI -> Auth : isAdmin()
+Auth -> DB : SELECT role FROM profiles WHERE id = auth.uid()
+DB --> Auth : role = 'admin'
+Auth --> UI : true
+UI --> Admin : show Admin dashboard
+
+== Load user list ==
+UI -> API : GET /api/admin/users
+API -> DB : SELECT id, email, full_name, role, created_at FROM profiles
+DB --> API : rows
+API --> UI : user list
+UI --> Admin : display users
+
+== Filter / search ==
+Admin -> UI : type filter
+UI -> API : GET /api/admin/users?search=...
+API -> DB : SELECT ... WHERE email ILIKE ... OR full_name ILIKE ...
+DB --> API : filtered rows
+API --> UI : filtered list
+UI --> Admin : show results
+
+== Change role ==
+Admin -> UI : select user, pick new role
+UI -> API : PATCH /api/admin/users/:id (role)
+API -> DB : UPDATE profiles SET role = ... WHERE id = ...
+DB --> API : ok
+API --> UI : updated
+UI --> Admin : show success
+
+== Delete user ==
+Admin -> UI : click Delete
+UI -> API : DELETE /api/admin/users/:id
+API -> DB : DELETE FROM profiles WHERE id = ...
+DB --> API : ok (cascade deletes auth.users)
+API --> UI : deleted
+UI --> Admin : remove from list
+
+== Back to chat ==
+Admin -> UI : click Back to chat
+UI -> UI : clear admin hash
+UI --> Admin : show Chat workspace
+@enduml
