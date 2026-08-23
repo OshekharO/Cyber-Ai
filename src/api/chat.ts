@@ -40,6 +40,18 @@ function classifyError(err: unknown, status?: number): ChatError {
 const SSE_DONE_MARKER = 'data: [DONE]';
 
 /**
+ * Detects whether a response body is the primary API's soft-failure message.
+ * The backend returns HTTP 200 with a warning instead of an error status code,
+ * so we must inspect the content to decide whether to fall back to Brave.
+ */
+function isPrimaryApiDownResponse(content: string): boolean {
+  return (
+    content.includes('temporarily experiencing an issue') ||
+    content.includes('⚠️') && content.includes('Cyber AI')
+  );
+}
+
+/**
  * Calls Brave Search API as a fallback.
  * Returns the assistant's response content or throws on error.
  */
@@ -181,6 +193,8 @@ export async function streamChat(
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
+    let accumulated = '';
+    let isDownResponse: boolean | null = null;
 
     while (true) {
       const { done, value } = await reader.read();
@@ -196,13 +210,53 @@ export async function streamChat(
           try {
             const json = JSON.parse(trimmed.slice(6)) as { choices?: { delta?: { content?: string } }[] };
             const token = json?.choices?.[0]?.delta?.content;
-            if (token) onToken(token);
+            if (token) {
+              accumulated += token;
+
+              // Early detection: check after each token whether this looks like
+              // the soft-failure message. Once confirmed, stop emitting.
+              if (isDownResponse === null && isPrimaryApiDownResponse(accumulated)) {
+                isDownResponse = true;
+              }
+
+              // Only stream tokens to the UI if this is NOT a down response
+              if (!isDownResponse) {
+                onToken(token);
+              }
+            }
           } catch {
             // Ignore malformed SSE lines
           }
         }
       }
     }
+
+    // If the stream was a soft-failure message, try Brave fallback
+    if (isDownResponse) {
+      if (BRAVE_API_TOKEN) {
+        try {
+          const braveReply = await callBraveAPI(messages, signal);
+          onToken(braveReply);
+          return;
+        } catch {
+          // Brave also failed — show updated credits
+          const updated = accumulated.replace(
+            /Developed by \*\*[^*]+\*\* & \*\*[^*]+\*\*/,
+            'Developed by **Saksham** & **Ayan**',
+          );
+          onToken(updated);
+          return;
+        }
+      } else {
+        const updated = accumulated.replace(
+          /Developed by \*\*[^*]+\*\* & \*\*[^*]+\*\*/,
+          'Developed by **Saksham** & **Ayan**',
+        );
+        onToken(updated);
+        return;
+      }
+    }
+
     return;
   }
 
@@ -218,5 +272,34 @@ export async function streamChat(
   if (!reply) {
     throw classifyError(new Error('Unexpected response format from server'));
   }
+
+  // If the primary API returned a soft-failure message (HTTP 200 but content
+  // indicates it is down), try the Brave fallback before surfacing the message.
+  if (isPrimaryApiDownResponse(reply)) {
+    if (BRAVE_API_TOKEN) {
+      try {
+        const braveReply = await callBraveAPI(messages, signal);
+        onToken(braveReply);
+        return;
+      } catch {
+        // Brave also failed — replace stale developer credits before showing
+        const updated = reply.replace(
+          /Developed by \*\*[^*]+\*\* & \*\*[^*]+\*\*/,
+          'Developed by **Saksham** & **Ayan**',
+        );
+        onToken(updated);
+        return;
+      }
+    } else {
+      // No Brave token available — still update the credits
+      const updated = reply.replace(
+        /Developed by \*\*[^*]+\*\* & \*\*[^*]+\*\*/,
+        'Developed by **Saksham** & **Ayan**',
+      );
+      onToken(updated);
+      return;
+    }
+  }
+
   onToken(reply);
 }
