@@ -39,6 +39,16 @@ function classifyError(err: unknown, status?: number): ChatError {
 
 const SSE_DONE_MARKER = 'data: [DONE]';
 
+/** Timeout for the primary API request (ms). Render free-tier cold starts can be slow. */
+const PRIMARY_API_TIMEOUT_MS = 60_000;
+
+/**
+ * Minimum number of characters to accumulate before deciding whether the SSE
+ * stream is a soft-failure message. The down-message is ~180 chars; buffering
+ * this many characters ensures we never emit partial wrong content to the UI.
+ */
+const DOWN_RESPONSE_DETECT_THRESHOLD = 40;
+
 /**
  * Detects whether a response body is the primary API's soft-failure message.
  * The backend returns HTTP 200 with a warning instead of an error status code,
@@ -47,7 +57,7 @@ const SSE_DONE_MARKER = 'data: [DONE]';
 function isPrimaryApiDownResponse(content: string): boolean {
   return (
     content.includes('temporarily experiencing an issue') ||
-    content.includes('⚠️') && content.includes('Cyber AI')
+    (content.includes('⚠️') && content.includes('Cyber AI'))
   );
 }
 
@@ -133,6 +143,14 @@ export async function streamChat(
   let useFallback = false;
   let primaryError: ChatError | undefined;
 
+  // Create a timeout controller linked to the caller's signal so that either
+  // the user cancelling or the timeout aborts the same fetch.
+  const timeoutCtrl = new AbortController();
+  const timeoutId = setTimeout(() => timeoutCtrl.abort(), PRIMARY_API_TIMEOUT_MS);
+  const combinedSignal = AbortSignal.any
+    ? AbortSignal.any([signal, timeoutCtrl.signal])
+    : signal; // fallback for older runtimes without AbortSignal.any
+
   try {
     res = await fetch(API_URL, {
       method: 'POST',
@@ -142,12 +160,14 @@ export async function streamChat(
         'X-Client': 'Cyber-AI-Frontend',
       },
       body: JSON.stringify({ messages, stream: true }),
-      signal,
+      signal: combinedSignal,
     });
   } catch (err) {
     // Primary API failed, try Brave fallback
     useFallback = true;
     primaryError = classifyError(err);
+  } finally {
+    clearTimeout(timeoutId);
   }
 
   if (!useFallback && res && !res.ok) {
@@ -194,6 +214,7 @@ export async function streamChat(
     const decoder = new TextDecoder();
     let buffer = '';
     let accumulated = '';
+    // null = still detecting, true = confirmed down, false = confirmed normal
     let isDownResponse: boolean | null = null;
 
     while (true) {
@@ -213,21 +234,36 @@ export async function streamChat(
             if (token) {
               accumulated += token;
 
-              // Early detection: check after each token whether this looks like
-              // the soft-failure message. Once confirmed, stop emitting.
-              if (isDownResponse === null && isPrimaryApiDownResponse(accumulated)) {
-                isDownResponse = true;
-              }
-
-              // Only stream tokens to the UI if this is NOT a down response
-              if (!isDownResponse) {
+              // While still detecting, buffer tokens without emitting.
+              // Once we have enough characters (or the stream ends), decide.
+              if (isDownResponse === null) {
+                if (isPrimaryApiDownResponse(accumulated)) {
+                  isDownResponse = true;
+                } else if (accumulated.length >= DOWN_RESPONSE_DETECT_THRESHOLD) {
+                  // Enough content accumulated and no match → safe to flush
+                  isDownResponse = false;
+                  onToken(accumulated);
+                }
+                // else: keep buffering
+              } else if (!isDownResponse) {
+                // Confirmed normal — stream tokens immediately
                 onToken(token);
               }
+              // If isDownResponse === true, silently discard tokens
             }
           } catch {
             // Ignore malformed SSE lines
           }
         }
+      }
+    }
+
+    // Stream ended while still in detection phase (short response).
+    // Flush whatever we have if it wasn't flagged as down.
+    if (isDownResponse === null) {
+      isDownResponse = isPrimaryApiDownResponse(accumulated);
+      if (!isDownResponse && accumulated) {
+        onToken(accumulated);
       }
     }
 
