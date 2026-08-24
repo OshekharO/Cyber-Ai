@@ -204,12 +204,12 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
                 // Skeleton loading rows
                 Array.from({ length: 5 }).map((_, index) => (
                   <tr key={`skeleton-${index}`} className="admin-skeleton-row">
-                    <td><div className="admin-skeleton-cell admin-skeleton-cell--long" /></td>
-                    <td><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
-                    <td><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
-                    <td><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
-                    <td><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
-                    <td><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
+                    <td data-label="User"><div className="admin-skeleton-cell admin-skeleton-cell--long" /></td>
+                    <td data-label="Email"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
+                    <td data-label="Role"><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
+                    <td data-label="Created"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
+                    <td data-label="Last sign in"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
+                    <td data-label="Actions"><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
                   </tr>
                 ))
               ) : paginatedUsers.length === 0 ? (
@@ -217,17 +217,17 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
               ) : (
                 paginatedUsers.map(user => (
                   <tr key={user.id}>
-                    <td><div className="admin-user-cell"><strong>{user.full_name ?? 'Unnamed user'}</strong><span>{user.id}</span></div></td>
-                    <td>{user.email ?? 'No email'}</td>
-                    <td>
+                    <td data-label="User"><div className="admin-user-cell"><strong>{user.full_name ?? 'Unnamed user'}</strong><span>{user.id}</span></div></td>
+                    <td data-label="Email">{user.email ?? 'No email'}</td>
+                    <td data-label="Role">
                       <select className="admin-role-select" value={user.role} onChange={(event) => void updateRole(user.id, event.target.value as 'user' | 'admin')} disabled={savingId === user.id}>
                         <option value="user">User</option>
                         <option value="admin">Admin</option>
                       </select>
                     </td>
-                    <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                    <td>{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}</td>
-                    <td><button className="admin-danger-btn" onClick={() => void deleteUser(user.id)} disabled={savingId === user.id}>Delete</button></td>
+                    <td data-label="Created">{new Date(user.created_at).toLocaleDateString()}</td>
+                    <td data-label="Last sign in">{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}</td>
+                    <td data-label="Actions"><button className="admin-danger-btn" onClick={() => void deleteUser(user.id)} disabled={savingId === user.id}>Delete</button></td>
                   </tr>
                 ))
               )}

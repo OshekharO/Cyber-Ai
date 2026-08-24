@@ -996,7 +996,6 @@
 }
 
 [data-theme="light"] .admin-panel {
-  color: black;
   background: white;
   backdrop-filter: none;
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.12);
@@ -1592,43 +1591,8 @@
   font-size: 14px;
 }
 
-@media (max-width: 760px) {
-  .auth-card,
-  .admin-panel {
-    padding: 20px;
-    border-radius: 20px;
-  }
-
-  .auth-title,
-  .admin-title {
-    font-size: 22px;
-  }
-
-  .header-account {
-    display: none;
-  }
-
-  .admin-shell {
-    padding: 16px;
-  }
-
-  .admin-panel {
-    border-radius: 20px;
-  }
-
-  .admin-stats {
-    gap: 10px;
-  }
-
-  .admin-stat-card {
-    min-width: 140px;
-    padding: 14px;
-  }
-
-  .admin-stat-card strong {
-    font-size: 22px;
-  }
-
+/* ── Admin responsive ── */
+@media (max-width: 900px) {
   .admin-table th,
   .admin-table td {
     padding: 10px 12px;
@@ -1637,6 +1601,7 @@
 
   .admin-table th {
     font-size: 11px;
+    letter-spacing: 0.04em;
   }
 
   .admin-role-select {
@@ -1644,43 +1609,249 @@
     padding: 8px 10px;
     font-size: 13px;
   }
-
-  .admin-secondary-btn,
-  .admin-refresh-btn,
-  .admin-danger-btn {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-
-  .admin-pagination-btn {
-    min-width: 30px;
-    height: 30px;
-    font-size: 12px;
-  }
 }
 
-@media (max-width: 480px) {
-  .admin-stats {
-    flex-direction: column;
-  }
-
-  .admin-stat-card {
-    min-width: 100%;
-    flex: 1 1 auto;
+@media (max-width: 1023px) {
+  .admin-shell {
+    padding: 18px;
   }
 
   .admin-topbar {
-    gap: 10px;
+    gap: 12px;
+  }
+
+  .admin-title {
+    font-size: 22px;
+  }
+
+  .admin-stat-card {
+    flex: 1 1 150px;
+    min-width: 150px;
+    padding: 14px;
+  }
+
+  .admin-stat-card strong {
+    font-size: 24px;
+  }
+
+  .admin-actions {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 767px) {
+  .admin-shell {
+    padding: 12px;
+  }
+
+  .admin-panel {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .admin-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .admin-title {
+    font-size: 20px;
+  }
+
+  .admin-subtitle {
+    font-size: 13px;
   }
 
   .admin-actions {
     width: 100%;
-    justify-content: stretch;
+    flex-direction: row;
   }
 
   .admin-actions .admin-secondary-btn {
     flex: 1;
     text-align: center;
+  }
+
+  .admin-stats {
+    gap: 10px;
+  }
+
+  .admin-stat-card {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .admin-stat-card strong {
+    font-size: 22px;
+  }
+
+  .admin-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .admin-search {
+    flex: 1 1 auto;
+  }
+
+  .admin-table-wrap {
+    border-radius: 14px;
+    border: none;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Responsive table → card layout */
+  .admin-table thead {
+    display: none;
+  }
+
+  .admin-table,
+  .admin-table tbody {
+    display: block;
+  }
+
+  .admin-table tr {
+    display: block;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--bg-card);
+    padding: 4px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  [data-theme="light"] .admin-table tr {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .admin-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+    font-size: 13px;
+    word-break: break-word;
+  }
+
+  .admin-table td:last-child {
+    border-bottom: none;
+  }
+
+  .admin-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    text-align: left;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    flex-shrink: 0;
+  }
+
+  .admin-table td[data-label="User"] {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .admin-table td[data-label="User"]::before {
+    margin-bottom: 4px;
+  }
+
+  .admin-user-cell span {
+    font-size: 11px;
+  }
+
+  .admin-role-select {
+    min-width: auto;
+    width: 100%;
+    max-width: 140px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .admin-danger-btn {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 13px;
+  }
+
+  .admin-pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .admin-pagination-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .admin-pagination-info {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-panel {
+    padding: 12px;
+    border-radius: 14px;
+  }
+
+  .admin-title {
+    font-size: 18px;
+  }
+
+  .admin-stat-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .admin-stat-card span {
+    font-size: 11px;
+  }
+
+  .admin-stat-card strong {
+    font-size: 20px;
+  }
+
+  .admin-table td {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .admin-table td::before {
+    font-size: 10px;
+  }
+
+  .admin-secondary-btn,
+  .admin-refresh-btn {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .admin-pagination-btn {
+    min-width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  .toast-container {
+    left: 12px;
+    right: 12px;
+    max-width: none;
+  }
+
+  .toast {
+    font-size: 13px;
   }
 }
 
