@@ -1,5 +1,5 @@
 @startuml
-title Cyber AI - Admin User Management Sequence
+title Cyber AI - Admin Dashboard Sequence
 
 actor Admin
 participant "AdminDashboard" as UI
@@ -8,7 +8,7 @@ participant "API Routes" as API
 database "Supabase DB" as DB
 
 == Access admin view ==
-Admin -> UI : navigate to admin hash
+Admin -> UI : open admin dashboard
 UI -> Auth : isAdmin()
 Auth -> DB : SELECT role FROM profiles WHERE id = auth.uid()
 DB --> Auth : role = 'admin'
@@ -17,37 +17,52 @@ UI --> Admin : show Admin dashboard
 
 == Load user list ==
 UI -> API : GET /api/admin/users
-API -> DB : SELECT id, email, full_name, role, created_at FROM profiles
-DB --> API : rows
-API --> UI : user list
-UI --> Admin : display users
+API -> DB : list users + profiles
+DB --> API : users
+API --> UI : { users }
+UI --> Admin : render users table
 
-== Filter / search ==
-Admin -> UI : type filter
-UI -> API : GET /api/admin/users?search=...
-API -> DB : SELECT ... WHERE email ILIKE ... OR full_name ILIKE ...
-DB --> API : filtered rows
-API --> UI : filtered list
-UI --> Admin : show results
+== Search / filter users ==
+Admin -> UI : type in search box
+UI -> UI : filter users locally (useMemo)
+UI --> Admin : show filtered results
 
 == Change role ==
-Admin -> UI : select user, pick new role
-UI -> API : PATCH /api/admin/users/:id (role)
-API -> DB : UPDATE profiles SET role = ... WHERE id = ...
+Admin -> UI : select role from dropdown
+UI -> API : PATCH /api/admin/users\nbody: { userId, role }
+API -> DB : UPDATE profiles SET role = ...\nUPDATE auth.users app_metadata
 DB --> API : ok
-API --> UI : updated
-UI --> Admin : show success
+API --> UI : { ok: true }
+UI --> Admin : show success toast
 
 == Delete user ==
-Admin -> UI : click Delete
-UI -> API : DELETE /api/admin/users/:id
-API -> DB : DELETE FROM profiles WHERE id = ...
-DB --> API : ok (cascade deletes auth.users)
-API --> UI : deleted
-UI --> Admin : remove from list
+Admin -> UI : click Delete / confirm
+UI -> API : DELETE /api/admin/users\nbody: { userId }
+API -> DB : DELETE FROM auth.users WHERE id = ...
+DB --> API : ok
+API --> UI : { ok: true }
+UI --> Admin : remove from list + toast
+
+== Load user queries ==
+Admin -> UI : switch to Queries tab
+UI -> API : GET /api/admin/queries?page=&perPage=&q=&source=
+API -> DB : SELECT FROM user_queries\nORDER created_at DESC
+DB --> API : rows
+API --> UI : { queries }
+UI --> Admin : render queries table
+
+== Filter / search queries ==
+Admin -> UI : type query search or change source
+UI -> UI : reload with new query params
+UI -> API : GET /api/admin/queries?q=...&source=...
+API -> DB : filtered rows
+DB --> API : rows
+API --> UI : { queries }
+UI --> Admin : show filtered results
 
 == Back to chat ==
 Admin -> UI : click Back to chat
-UI -> UI : clear admin hash
-UI --> Admin : show Chat workspace
+UI -> Auth : onBackToChat()
+Auth --> Admin : show Chat workspace
+
 @enduml
