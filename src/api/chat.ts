@@ -47,7 +47,7 @@ function classifyError(err: unknown, status?: number): ChatError {
 const SSE_DONE_MARKER = 'data: [DONE]';
 
 /** Timeout for the primary API request (ms). Render free-tier cold starts can be slow. */
-const PRIMARY_API_TIMEOUT_MS = 60_000;
+const PRIMARY_API_TIMEOUT_MS = 120_000;
 
 /**
  * Minimum number of characters to accumulate before deciding whether the SSE
