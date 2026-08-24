@@ -1,38 +1,30 @@
 @startuml
-left to right direction
 skinparam packageStyle rectangle
+left to right direction
 
 actor "User" as User <<human>>
 actor "Admin" as Admin <<human>>
-User <|-- Admin
 
-actor "AI Chat Service" as AI <<system>>
-actor "Brave Search API" as Brave <<system>>
-
-rectangle "Authentication" {
+rectangle "User Features" {
   (Sign in) as SignIn
   (Register account) as SignUp
   (Sign out) as SignOut
-}
-
-rectangle "Chat" {
   (Send chat message) as SendMsg
   (Search messages) as Search
   (Run chat command) as Command
   (Manage chat sessions) as Sessions
   (Toggle theme) as Theme
-}
-
-rectangle "Landing" {
   (Browse landing page) as BrowseLanding
 }
 
-rectangle "Administration" {
+rectangle "Admin Features" {
   (View user list) as ListUsers
   (Filter / search users) as FilterUsers
   (View user stats) as Stats
   (Change user role) as ChangeRole
   (Delete user) as DeleteUser
+  (View user queries) as ListQueries
+  (Filter / search queries) as FilterQueries
 }
 
 ' ---- User flows ----
@@ -46,16 +38,18 @@ User --> Sessions
 User --> Theme
 User --> BrowseLanding
 
-SendMsg --> AI
-SendMsg --> Brave : fallback
-
-' ---- Admin flows (Admin inherits all User use cases) ----
+' ---- Admin flows ----
 Admin --> ListUsers
 Admin --> FilterUsers
 Admin --> Stats
 Admin --> ChangeRole
 Admin --> DeleteUser
+Admin --> ListQueries
+Admin --> FilterQueries
 
+' ---- Include relationships ----
 ListUsers .> FilterUsers : includes
 ListUsers .> Stats : includes
+ListQueries .> FilterQueries : includes
+
 @enduml
