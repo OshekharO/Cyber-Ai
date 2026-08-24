@@ -253,7 +253,8 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
         </nav>
 
         {tab === 'users' && (
-        <section className="admin-stats">
+        <>
+          <section className="admin-stats">
           <article className="admin-stat-card"><span>Total users</span><strong>{stats.total}</strong></article>
           <article className="admin-stat-card"><span>Admins</span><strong>{stats.admins}</strong></article>
           <article className="admin-stat-card"><span>Regular users</span><strong>{stats.users}</strong></article>
@@ -368,8 +369,8 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
             </div>
           </div>
         )}
-      )}
-
+      </>)}
+      
       {tab === 'queries' && (
         <section className="admin-queries">
           <div className="admin-toolbar">
