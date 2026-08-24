@@ -92,7 +92,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
           </p>
           <div className="landing-hero-actions">
             <button className="landing-hero-primary" onClick={onGetStarted}>
-              Start Hacking (Ethically) <FiArrowRight size={18} />
+              Start <FiArrowRight size={18} />
             </button>
             <a href="#features" className="landing-hero-secondary">Explore Features</a>
           </div>

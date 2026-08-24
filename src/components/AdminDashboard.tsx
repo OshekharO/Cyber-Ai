@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, useCallback } from 'react';
 import type { Profile } from '../hooks/useAuth.ts';
+import './AdminDashboard.css';
 
 interface AdminDashboardProps {
   session: { access_token: string };
@@ -45,7 +46,6 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error'; message: string }>>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // User queries tab
   const [tab, setTab] = useState<AdminTab>('users');
   const [queries, setQueries] = useState<AdminQuery[]>([]);
   const [loadingQueries, setLoadingQueries] = useState(false);
@@ -138,7 +138,6 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
     return { total: users.length, admins: adminCount, users: users.length - adminCount };
   }, [users]);
 
-  // Pagination logic
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE));
   const paginatedUsers = useMemo(() => {
     const start = (currentPage - 1) * PAGE_SIZE;
@@ -146,12 +145,10 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
     return filteredUsers.slice(start, end);
   }, [filteredUsers, currentPage]);
 
-  // Reset to page 1 when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [query]);
 
-  // Reset query page when query filters change
   useEffect(() => {
     setQueryPage(1);
   }, [querySearch, querySource]);
@@ -219,272 +216,327 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   };
 
   return (
-    <main className="screen-shell admin-shell">
-      <section className="admin-panel">
-        <header className="admin-topbar">
-          <div>
-            <p className="admin-kicker">Admin dashboard</p>
-            <h1 className="admin-title">Manage users and roles</h1>
-            <p className="admin-subtitle">Signed in as {profile.full_name ?? profile.email ?? 'admin'}.</p>
+    <div className="adm">
+      <header className="adm-header">
+        <div className="adm-header-inner">
+          <div className="adm-brand">
+            <p className="adm-kicker">Admin Dashboard</p>
+            <h1 className="adm-title">Manage Users and Roles</h1>
+            <p className="adm-subtitle">Signed in as {profile.full_name ?? profile.email ?? 'admin'}.</p>
           </div>
 
-          <div className="admin-actions">
-            <button className="admin-secondary-btn" onClick={onBackToChat}>Back to chat</button>
-            <button className="admin-secondary-btn" onClick={onSignOut}>Sign out</button>
+          <div className="adm-actions">
+            <button className="adm-btn adm-btn--secondary" onClick={onBackToChat}>Back to chat</button>
+            <button className="adm-btn adm-btn--secondary" onClick={onSignOut}>Sign out</button>
           </div>
-        </header>
+        </div>
+      </header>
 
-        {notice && <div className="admin-notice">{notice}</div>}
-        {error && <div className="admin-error" role="alert">{error}</div>}
+      {notice && <div className="adm-notice">{notice}</div>}
+      {error && <div className="adm-error" role="alert">{error}</div>}
 
-        <nav className="admin-tabs">
+      <nav className="adm-tabs">
+        <div className="adm-tabs-inner">
           <button
-            className={`admin-tab ${tab === 'users' ? 'admin-tab--active' : ''}`}
+            className={`adm-tab ${tab === 'users' ? 'adm-tab--active' : ''}`}
             onClick={() => setTab('users')}
           >
             Users
           </button>
           <button
-            className={`admin-tab ${tab === 'queries' ? 'admin-tab--active' : ''}`}
+            className={`adm-tab ${tab === 'queries' ? 'adm-tab--active' : ''}`}
             onClick={() => setTab('queries')}
           >
             User Queries
           </button>
-        </nav>
-
-        {tab === 'users' && (
-        <>
-          <section className="admin-stats">
-          <article className="admin-stat-card"><span>Total users</span><strong>{stats.total}</strong></article>
-          <article className="admin-stat-card"><span>Admins</span><strong>{stats.admins}</strong></article>
-          <article className="admin-stat-card"><span>Regular users</span><strong>{stats.users}</strong></article>
-        </section>
-
-        <div className="admin-toolbar">
-          <label className="admin-search">
-            <span>Search</span>
-            <input type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Email, name, role" />
-          </label>
-
-          <button className="admin-refresh-btn" onClick={() => void loadUsers()} disabled={loading}>{loading ? 'Refreshing...' : 'Refresh'}</button>
         </div>
+      </nav>
 
-        <div className="admin-table-wrap">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Created</th>
-                <th>Last sign in</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                // Skeleton loading rows
-                Array.from({ length: 5 }).map((_, index) => (
-                  <tr key={`skeleton-${index}`} className="admin-skeleton-row">
-                    <td data-label="User"><div className="admin-skeleton-cell admin-skeleton-cell--long" /></td>
-                    <td data-label="Email"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
-                    <td data-label="Role"><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
-                    <td data-label="Created"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
-                    <td data-label="Last sign in"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
-                    <td data-label="Actions"><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
-                  </tr>
-                ))
-              ) : paginatedUsers.length === 0 ? (
-                <tr><td colSpan={6} className="admin-empty">No users found.</td></tr>
-              ) : (
-                paginatedUsers.map(user => (
-                  <tr key={user.id}>
-                    <td data-label="User"><div className="admin-user-cell"><strong>{user.full_name ?? 'Unnamed user'}</strong><span>{user.id}</span></div></td>
-                    <td data-label="Email">{user.email ?? 'No email'}</td>
-                    <td data-label="Role">
-                      <select className="admin-role-select" value={user.role} onChange={(event) => void updateRole(user.id, event.target.value as 'user' | 'admin')} disabled={savingId === user.id}>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </td>
-                    <td data-label="Created">{new Date(user.created_at).toLocaleDateString()}</td>
-                    <td data-label="Last sign in">{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}</td>
-                    <td data-label="Actions"><button className="admin-danger-btn" onClick={() => void deleteUser(user.id)} disabled={savingId === user.id}>Delete</button></td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+      <main className="adm-body">
+        <div className="adm-inner">
+          {tab === 'users' && (
+            <>
+              <section className="adm-stats">
+                <article className="adm-stat-card">
+                  <span>Total users</span>
+                  <strong>{stats.total}</strong>
+                </article>
+                <article className="adm-stat-card">
+                  <span>Admins</span>
+                  <strong>{stats.admins}</strong>
+                </article>
+                <article className="adm-stat-card">
+                  <span>Regular users</span>
+                  <strong>{stats.users}</strong>
+                </article>
+              </section>
 
-        {/* Pagination controls */}
-        {!loading && filteredUsers.length > 0 && (
-          <div className="admin-pagination">
-            <div className="admin-pagination-info">
-              Showing {((currentPage - 1) * PAGE_SIZE) + 1}–{Math.min(currentPage * PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length} users
-            </div>
-            <div className="admin-pagination-controls">
-              <button
-                className="admin-pagination-btn"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                aria-label="Previous page"
-              >
-                ←
-              </button>
-              {Array.from({ length: totalPages }).map((_, idx) => {
-                const page = idx + 1;
-                // Show current page, first, last, and pages around current
-                if (
-                  page === 1 ||
-                  page === totalPages ||
-                  (page >= currentPage - 1 && page <= currentPage + 1)
-                ) {
-                  return (
+              <div className="adm-toolbar">
+                <label className="adm-search">
+                  <span className="adm-search-label">Search</span>
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                    placeholder="Email, name, role"
+                  />
+                </label>
+
+                <button
+                  className="adm-btn adm-btn--primary"
+                  onClick={() => void loadUsers()}
+                  disabled={loading}
+                >
+                  {loading ? 'Refreshing...' : 'Refresh'}
+                </button>
+              </div>
+
+              <div className="adm-table-wrap">
+                <table className="adm-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Created</th>
+                      <th>Last sign in</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      Array.from({ length: 5 }).map((_, index) => (
+                        <tr key={`skeleton-${index}`} className="adm-skeleton-row">
+                          <td data-label="User"><div className="adm-skeleton-cell adm-skeleton-cell--long" /></td>
+                          <td data-label="Email"><div className="adm-skeleton-cell adm-skeleton-cell--medium" /></td>
+                          <td data-label="Role"><div className="adm-skeleton-cell adm-skeleton-cell--short" /></td>
+                          <td data-label="Created"><div className="adm-skeleton-cell adm-skeleton-cell--medium" /></td>
+                          <td data-label="Last sign in"><div className="adm-skeleton-cell adm-skeleton-cell--medium" /></td>
+                          <td data-label="Actions"><div className="adm-skeleton-cell adm-skeleton-cell--short" /></td>
+                        </tr>
+                      ))
+                    ) : paginatedUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="adm-empty">No users found.</td>
+                      </tr>
+                    ) : (
+                      paginatedUsers.map(user => (
+                        <tr key={user.id}>
+                          <td data-label="User">
+                            <div className="adm-user-cell">
+                              <strong>{user.full_name ?? 'Unnamed user'}</strong>
+                              <span>{user.id}</span>
+                            </div>
+                          </td>
+                          <td data-label="Email">{user.email ?? 'No email'}</td>
+                          <td data-label="Role">
+                            <select
+                              className="adm-role-select"
+                              value={user.role}
+                              onChange={(event) => void updateRole(user.id, event.target.value as 'user' | 'admin')}
+                              disabled={savingId === user.id}
+                            >
+                              <option value="user">User</option>
+                              <option value="admin">Admin</option>
+                            </select>
+                          </td>
+                          <td data-label="Created">{new Date(user.created_at).toLocaleDateString()}</td>
+                          <td data-label="Last sign in">{user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : 'Never'}</td>
+                          <td data-label="Actions">
+                            <button
+                              className="adm-btn adm-btn--danger"
+                              onClick={() => void deleteUser(user.id)}
+                              disabled={savingId === user.id}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {!loading && filteredUsers.length > 0 && (
+                <div className="adm-pagination">
+                  <div className="adm-pagination-info">
+                    Showing {((currentPage - 1) * PAGE_SIZE) + 1}–{Math.min(currentPage * PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length} users
+                  </div>
+                  <div className="adm-pagination-controls">
                     <button
-                      key={page}
-                      className={`admin-pagination-btn ${page === currentPage ? 'admin-pagination-btn--active' : ''}`}
-                      onClick={() => setCurrentPage(page)}
-                      aria-label={`Go to page ${page}`}
-                      aria-current={page === currentPage ? 'page' : undefined}
+                      className="adm-pagination-btn"
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      aria-label="Previous page"
                     >
-                      {page}
+                      ←
                     </button>
-                  );
-                }
-                // Show ellipsis for gaps
-                if (page === 2 || page === totalPages - 1) {
-                  return <span key={page} className="admin-pagination-ellipsis">…</span>;
-                }
-                return null;
-              })}
-              <button
-                className="admin-pagination-btn"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                aria-label="Next page"
-              >
-                →
-              </button>
-            </div>
-          </div>
-        )}
-      </>)}
-      
-      {tab === 'queries' && (
-        <section className="admin-queries">
-          <div className="admin-toolbar">
-            <label className="admin-search">
-              <span>Search</span>
-              <input
-                type="search"
-                value={querySearch}
-                onChange={(event) => setQuerySearch(event.target.value)}
-                placeholder="Search queries"
-              />
-            </label>
+                    {Array.from({ length: totalPages }).map((_, idx) => {
+                      const page = idx + 1;
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            className={`adm-pagination-btn ${page === currentPage ? 'adm-pagination-btn--active' : ''}`}
+                            onClick={() => setCurrentPage(page)}
+                            aria-label={`Go to page ${page}`}
+                            aria-current={page === currentPage ? 'page' : undefined}
+                          >
+                            {page}
+                          </button>
+                        );
+                      }
+                      if (page === 2 || page === totalPages - 1) {
+                        return <span key={page} className="adm-pagination-ellipsis">…</span>;
+                      }
+                      return null;
+                    })}
+                    <button
+                      className="adm-pagination-btn"
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      aria-label="Next page"
+                    >
+                      →
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
 
-            <label className="admin-search">
-              <span>Source</span>
-              <select value={querySource} onChange={(event) => setQuerySource(event.target.value as 'all' | 'primary' | 'brave')}>
-                <option value="all">All</option>
-                <option value="primary">Primary API</option>
-                <option value="brave">Brave fallback</option>
-              </select>
-            </label>
+          {tab === 'queries' && (
+            <section className="adm-stats" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="adm-toolbar">
+                <label className="adm-search">
+                  <span className="adm-search-label">Search</span>
+                  <input
+                    type="search"
+                    value={querySearch}
+                    onChange={(event) => setQuerySearch(event.target.value)}
+                    placeholder="Search queries"
+                  />
+                </label>
 
-            <button className="admin-refresh-btn" onClick={() => void loadQueries()} disabled={loadingQueries}>
-              {loadingQueries ? 'Refreshing...' : 'Refresh'}
-            </button>
-          </div>
+                <label className="adm-search">
+                  <span className="adm-search-label">Source</span>
+                  <select
+                    value={querySource}
+                    onChange={(event) => setQuerySource(event.target.value as 'all' | 'primary' | 'brave')}
+                  >
+                    <option value="all">All</option>
+                    <option value="primary">Primary API</option>
+                    <option value="brave">Brave fallback</option>
+                  </select>
+                </label>
 
-          {queryError && <div className="admin-error" role="alert">{queryError}</div>}
+                <button
+                  className="adm-btn adm-btn--primary"
+                  onClick={() => void loadQueries()}
+                  disabled={loadingQueries}
+                >
+                  {loadingQueries ? 'Refreshing...' : 'Refresh'}
+                </button>
+              </div>
 
-          <div className="admin-table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>User</th>
-                  <th>Query</th>
-                  <th>Source</th>
-                  <th>Status</th>
-                  <th>Asked at</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loadingQueries ? (
-                  Array.from({ length: 6 }).map((_, index) => (
-                    <tr key={`q-skeleton-${index}`} className="admin-skeleton-row">
-                      <td data-label="User"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
-                      <td data-label="Query"><div className="admin-skeleton-cell admin-skeleton-cell--long" /></td>
-                      <td data-label="Source"><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
-                      <td data-label="Status"><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
-                      <td data-label="Asked at"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
+              {queryError && <div className="adm-error" role="alert">{queryError}</div>}
+
+              <div className="adm-table-wrap">
+                <table className="adm-table">
+                  <thead>
+                    <tr>
+                      <th>User</th>
+                      <th>Query</th>
+                      <th>Source</th>
+                      <th>Status</th>
+                      <th>Asked at</th>
                     </tr>
-                  ))
-                ) : queries.length === 0 ? (
-                  <tr><td colSpan={5} className="admin-empty">No queries found.</td></tr>
-                ) : (
-                  queries.map((item) => (
-                    <tr key={item.id}>
-                      <td data-label="User">
-                        <div className="admin-user-cell">
-                          <strong>{item.fullName ?? 'Anonymous'}</strong>
-                          <span>{item.email ?? item.userId ?? 'Unknown'}</span>
-                        </div>
-                      </td>
-                      <td data-label="Query" className="admin-query-cell">{item.query}</td>
-                      <td data-label="Source">
-                        <span className={`admin-badge admin-badge--${item.source}`}>{item.source === 'primary' ? 'Primary' : 'Brave'}</span>
-                      </td>
-                      <td data-label="Status">
-                        <span className={`admin-badge admin-badge--${item.status}`}>{item.status}</span>
-                      </td>
-                      <td data-label="Asked at">{new Date(item.createdAt).toLocaleString()}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {loadingQueries ? (
+                      Array.from({ length: 6 }).map((_, index) => (
+                        <tr key={`q-skeleton-${index}`} className="adm-skeleton-row">
+                          <td data-label="User"><div className="adm-skeleton-cell adm-skeleton-cell--medium" /></td>
+                          <td data-label="Query"><div className="adm-skeleton-cell adm-skeleton-cell--long" /></td>
+                          <td data-label="Source"><div className="adm-skeleton-cell adm-skeleton-cell--short" /></td>
+                          <td data-label="Status"><div className="adm-skeleton-cell adm-skeleton-cell--short" /></td>
+                          <td data-label="Asked at"><div className="adm-skeleton-cell adm-skeleton-cell--medium" /></td>
+                        </tr>
+                      ))
+                    ) : queries.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="adm-empty">No queries found.</td>
+                      </tr>
+                    ) : (
+                      queries.map((item) => (
+                        <tr key={item.id}>
+                          <td data-label="User">
+                            <div className="adm-user-cell">
+                              <strong>{item.fullName ?? 'Anonymous'}</strong>
+                              <span>{item.email ?? item.userId ?? 'Unknown'}</span>
+                            </div>
+                          </td>
+                          <td data-label="Query" className="adm-query-cell">{item.query}</td>
+                          <td data-label="Source">
+                            <span className={`adm-badge adm-badge--${item.source}`}>
+                              {item.source === 'primary' ? 'Primary' : 'Brave'}
+                            </span>
+                          </td>
+                          <td data-label="Status">
+                            <span className={`adm-badge adm-badge--${item.status}`}>{item.status}</span>
+                          </td>
+                          <td data-label="Asked at">{new Date(item.createdAt).toLocaleString()}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
-          <div className="admin-pagination">
-            <div className="admin-pagination-info">
-              Showing {queries.length} quer{(queries.length === 1 ? 'y' : 'ies')}
-              {querySearch.trim() || querySource !== 'all' ? ' (filtered)' : ''}
-            </div>
-            <div className="admin-pagination-controls">
-              <button
-                className="admin-pagination-btn"
-                onClick={() => setQueryPage((p) => Math.max(1, p - 1))}
-                disabled={queryPage === 1}
-                aria-label="Previous page"
-              >
-                ←
-              </button>
-              <button
-                className="admin-pagination-btn"
-                onClick={() => setQueryPage((p) => p + 1)}
-                disabled={queries.length < QUERY_PAGE_SIZE}
-                aria-label="Next page"
-              >
-                →
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
-      </section>
+              <div className="adm-pagination">
+                <div className="adm-pagination-info">
+                  Showing {queries.length} quer{(queries.length === 1 ? 'y' : 'ies')}
+                  {querySearch.trim() || querySource !== 'all' ? ' (filtered)' : ''}
+                </div>
+                <div className="adm-pagination-controls">
+                  <button
+                    className="adm-pagination-btn"
+                    onClick={() => setQueryPage((p) => Math.max(1, p - 1))}
+                    disabled={queryPage === 1}
+                    aria-label="Previous page"
+                  >
+                    ←
+                  </button>
+                  <button
+                    className="adm-pagination-btn"
+                    onClick={() => setQueryPage((p) => p + 1)}
+                    disabled={queries.length < QUERY_PAGE_SIZE}
+                    aria-label="Next page"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+        </div>
+      </main>
 
       {/* Toast notifications */}
-      <div className="toast-container">
+      <div className="adm-toast-container">
         {toasts.map((toast) => (
-          <div key={toast.id} className={`toast toast--${toast.type}`}>
-            <span className="toast-icon">{toast.type === 'success' ? '✅' : '❌'}</span>
-            <span className="toast-content">{toast.message}</span>
+          <div key={toast.id} className={`adm-toast adm-toast--${toast.type}`}>
+            <span className="adm-toast-icon">
+              {toast.type === 'success' ? '✅' : '❌'}
+            </span>
+            <span className="adm-toast-content">{toast.message}</span>
             <button
-              className="toast-close"
+              className="adm-toast-close"
               onClick={() => setToasts(prev => prev.filter(t => t.id !== toast.id))}
               aria-label="Dismiss notification"
             >
@@ -493,6 +545,6 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
           </div>
         ))}
       </div>
-    </main>
+    </div>
   );
 }
