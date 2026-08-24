@@ -85,3 +85,38 @@ create policy "Users can insert their profile"
 on public.profiles
 for insert
 with check (auth.uid() = id or public.is_admin());
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- User queries — records what users asked the assistant so admins can see
+-- what people are searching for. `source` distinguishes the primary API from
+-- the Brave fallback, `status` records whether the request succeeded.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+create table if not exists public.user_queries (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid references public.profiles (id) on delete set null,
+  query text not null,
+  source text not null default 'primary' check (source in ('primary', 'brave')),
+  status text not null default 'success' check (status in ('success', 'error', 'cancelled')),
+  session_id text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists user_queries_user_id_idx on public.user_queries (user_id);
+create index if not exists user_queries_created_at_idx on public.user_queries (created_at desc);
+
+alter table public.user_queries enable row level security;
+
+-- Authenticated users may record only their own queries.
+drop policy if exists "Users can insert their own queries" on public.user_queries;
+create policy "Users can insert their own queries"
+on public.user_queries
+for insert
+with check (auth.uid() = user_id);
+
+-- Only admins may read recorded queries.
+drop policy if exists "Admins can read queries" on public.user_queries;
+create policy "Admins can read queries"
+on public.user_queries
+for select
+using (public.is_admin());

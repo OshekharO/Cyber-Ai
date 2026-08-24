@@ -19,7 +19,22 @@ interface AdminUser {
   confirmed_at: string | null;
 }
 
+interface AdminQuery {
+  id: string;
+  userId: string | null;
+  email: string | null;
+  fullName: string | null;
+  query: string;
+  source: 'primary' | 'brave';
+  status: 'success' | 'error' | 'cancelled';
+  sessionId: string | null;
+  createdAt: string;
+}
+
+type AdminTab = 'users' | 'queries';
+
 const PAGE_SIZE = 5;
+const QUERY_PAGE_SIZE = 50;
 
 export function AdminDashboard({ session, profile, onBackToChat, onSignOut, notice }: AdminDashboardProps) {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -29,6 +44,15 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Array<{ id: string; type: 'success' | 'error'; message: string }>>([]);
   const [currentPage, setCurrentPage] = useState(1);
+
+  // User queries tab
+  const [tab, setTab] = useState<AdminTab>('users');
+  const [queries, setQueries] = useState<AdminQuery[]>([]);
+  const [loadingQueries, setLoadingQueries] = useState(false);
+  const [querySearch, setQuerySearch] = useState('');
+  const [querySource, setQuerySource] = useState<'all' | 'primary' | 'brave'>('all');
+  const [queryError, setQueryError] = useState<string | null>(null);
+  const [queryPage, setQueryPage] = useState(1);
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
     const id = crypto.randomUUID();
@@ -65,6 +89,42 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
     void loadUsers();
   }, [session.access_token]);
 
+  const loadQueries = useCallback(async () => {
+    setLoadingQueries(true);
+    setQueryError(null);
+
+    try {
+      const params = new URLSearchParams({
+        page: String(queryPage),
+        perPage: String(QUERY_PAGE_SIZE),
+      });
+      if (querySearch.trim()) params.set('q', querySearch.trim());
+      if (querySource !== 'all') params.set('source', querySource);
+
+      const response = await fetch(`/api/admin/queries?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(payload?.error ?? `Failed to load queries (${response.status}).`);
+      }
+
+      const payload = await response.json() as { queries: AdminQuery[] };
+      setQueries(payload.queries);
+    } catch (err) {
+      setQueryError(err instanceof Error ? err.message : 'Unable to load queries.');
+    } finally {
+      setLoadingQueries(false);
+    }
+  }, [session.access_token, queryPage, querySearch, querySource]);
+
+  useEffect(() => {
+    if (tab === 'queries') {
+      void loadQueries();
+    }
+  }, [tab, loadQueries]);
+
   const filteredUsers = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return users;
@@ -90,6 +150,11 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   useEffect(() => {
     setCurrentPage(1);
   }, [query]);
+
+  // Reset query page when query filters change
+  useEffect(() => {
+    setQueryPage(1);
+  }, [querySearch, querySource]);
 
   const updateRole = async (userId: string, role: 'user' | 'admin') => {
     setSavingId(userId);
@@ -172,6 +237,22 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
         {notice && <div className="admin-notice">{notice}</div>}
         {error && <div className="admin-error" role="alert">{error}</div>}
 
+        <nav className="admin-tabs">
+          <button
+            className={`admin-tab ${tab === 'users' ? 'admin-tab--active' : ''}`}
+            onClick={() => setTab('users')}
+          >
+            Users
+          </button>
+          <button
+            className={`admin-tab ${tab === 'queries' ? 'admin-tab--active' : ''}`}
+            onClick={() => setTab('queries')}
+          >
+            User Queries
+          </button>
+        </nav>
+
+        {tab === 'users' && (
         <section className="admin-stats">
           <article className="admin-stat-card"><span>Total users</span><strong>{stats.total}</strong></article>
           <article className="admin-stat-card"><span>Admins</span><strong>{stats.admins}</strong></article>
@@ -287,6 +368,112 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
             </div>
           </div>
         )}
+      )}
+
+      {tab === 'queries' && (
+        <section className="admin-queries">
+          <div className="admin-toolbar">
+            <label className="admin-search">
+              <span>Search</span>
+              <input
+                type="search"
+                value={querySearch}
+                onChange={(event) => setQuerySearch(event.target.value)}
+                placeholder="Search queries"
+              />
+            </label>
+
+            <label className="admin-search">
+              <span>Source</span>
+              <select value={querySource} onChange={(event) => setQuerySource(event.target.value as 'all' | 'primary' | 'brave')}>
+                <option value="all">All</option>
+                <option value="primary">Primary API</option>
+                <option value="brave">Brave fallback</option>
+              </select>
+            </label>
+
+            <button className="admin-refresh-btn" onClick={() => void loadQueries()} disabled={loadingQueries}>
+              {loadingQueries ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+
+          {queryError && <div className="admin-error" role="alert">{queryError}</div>}
+
+          <div className="admin-table-wrap">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Query</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                  <th>Asked at</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingQueries ? (
+                  Array.from({ length: 6 }).map((_, index) => (
+                    <tr key={`q-skeleton-${index}`} className="admin-skeleton-row">
+                      <td data-label="User"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
+                      <td data-label="Query"><div className="admin-skeleton-cell admin-skeleton-cell--long" /></td>
+                      <td data-label="Source"><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
+                      <td data-label="Status"><div className="admin-skeleton-cell admin-skeleton-cell--short" /></td>
+                      <td data-label="Asked at"><div className="admin-skeleton-cell admin-skeleton-cell--medium" /></td>
+                    </tr>
+                  ))
+                ) : queries.length === 0 ? (
+                  <tr><td colSpan={5} className="admin-empty">No queries found.</td></tr>
+                ) : (
+                  queries.map((item) => (
+                    <tr key={item.id}>
+                      <td data-label="User">
+                        <div className="admin-user-cell">
+                          <strong>{item.fullName ?? 'Anonymous'}</strong>
+                          <span>{item.email ?? item.userId ?? 'Unknown'}</span>
+                        </div>
+                      </td>
+                      <td data-label="Query" className="admin-query-cell">{item.query}</td>
+                      <td data-label="Source">
+                        <span className={`admin-badge admin-badge--${item.source}`}>{item.source === 'primary' ? 'Primary' : 'Brave'}</span>
+                      </td>
+                      <td data-label="Status">
+                        <span className={`admin-badge admin-badge--${item.status}`}>{item.status}</span>
+                      </td>
+                      <td data-label="Asked at">{new Date(item.createdAt).toLocaleString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="admin-pagination">
+            <div className="admin-pagination-info">
+              Showing {queries.length} quer{(queries.length === 1 ? 'y' : 'ies')}
+              {querySearch.trim() || querySource !== 'all' ? ' (filtered)' : ''}
+            </div>
+            <div className="admin-pagination-controls">
+              <button
+                className="admin-pagination-btn"
+                onClick={() => setQueryPage((p) => Math.max(1, p - 1))}
+                disabled={queryPage === 1}
+                aria-label="Previous page"
+              >
+                ←
+              </button>
+              <button
+                className="admin-pagination-btn"
+                onClick={() => setQueryPage((p) => p + 1)}
+                disabled={queries.length < QUERY_PAGE_SIZE}
+                aria-label="Next page"
+              >
+                →
+              </button>
+            </div>
+          </div>
+        </section>
+      )}
+
       </section>
 
       {/* Toast notifications */}

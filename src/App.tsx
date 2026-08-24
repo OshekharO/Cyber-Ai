@@ -140,6 +140,7 @@ export default function App() {
       {welcomeModal}
       <ChatWorkspace
         userId={auth.user?.id ?? 'guest'}
+        sessionToken={auth.session?.access_token}
         userLabel={auth.profile?.full_name ?? (auth.user?.user_metadata.full_name as string | undefined) ?? (auth.user?.user_metadata.name as string | undefined) ?? auth.user?.email?.split('@')[0] ?? 'Account'}
         isAdmin={auth.isAdmin}
         onOpenAdmin={openAdmin}

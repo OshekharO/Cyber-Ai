@@ -17,6 +17,13 @@ export interface ChatError {
   kind: ErrorKind;
 }
 
+/** Which backend actually answered the request. */
+export type QuerySource = 'primary' | 'brave';
+
+export interface StreamResult {
+  source: QuerySource;
+}
+
 function classifyError(err: unknown, status?: number): ChatError {
   if (status === 429) {
     return { message: 'Rate limit reached. Please wait a moment before retrying.', kind: 'ratelimit' };
@@ -132,16 +139,18 @@ async function callBraveAPI(
  * Sends messages to the API. Calls `onToken` for each streamed chunk.
  * Falls back to a single-chunk call if the API returns JSON (non-streaming).
  * If the primary API fails, falls back to Brave Search API.
- * Throws a `ChatError` on failure.
+ * Throws a `ChatError` on failure. On success returns which backend served
+ * the response so callers can record it against the user's query.
  */
 export async function streamChat(
   messages: ChatMessage[],
   onToken: (token: string) => void,
   signal: AbortSignal,
-): Promise<void> {
+): Promise<StreamResult> {
   let res: Response | undefined;
   let useFallback = false;
   let primaryError: ChatError | undefined;
+  let source: QuerySource = 'primary';
 
   // Create a timeout controller linked to the caller's signal so that either
   // the user cancelling or the timeout aborts the same fetch.
@@ -183,8 +192,9 @@ export async function streamChat(
   if (useFallback && BRAVE_API_TOKEN) {
     try {
       const reply = await callBraveAPI(messages, signal);
+      source = 'brave';
       onToken(reply);
-      return;
+      return { source };
     } catch (braveErr) {
       // If Brave also fails, throw the original error or Brave error
       if (primaryError) {
@@ -272,8 +282,9 @@ export async function streamChat(
       if (BRAVE_API_TOKEN) {
         try {
           const braveReply = await callBraveAPI(messages, signal);
+          source = 'brave';
           onToken(braveReply);
-          return;
+          return { source };
         } catch {
           // Brave also failed — show updated credits
           const updated = accumulated.replace(
@@ -281,7 +292,7 @@ export async function streamChat(
             'Developed by **Saksham** & **Ayan**',
           );
           onToken(updated);
-          return;
+          return { source };
         }
       } else {
         const updated = accumulated.replace(
@@ -289,11 +300,11 @@ export async function streamChat(
           'Developed by **Saksham** & **Ayan**',
         );
         onToken(updated);
-        return;
+        return { source };
       }
     }
 
-    return;
+    return { source };
   }
 
   // --- Fallback: non-streaming JSON ---
@@ -315,8 +326,9 @@ export async function streamChat(
     if (BRAVE_API_TOKEN) {
       try {
         const braveReply = await callBraveAPI(messages, signal);
+        source = 'brave';
         onToken(braveReply);
-        return;
+        return { source };
       } catch {
         // Brave also failed — replace stale developer credits before showing
         const updated = reply.replace(
@@ -324,7 +336,7 @@ export async function streamChat(
           'Developed by **Saksham** & **Ayan**',
         );
         onToken(updated);
-        return;
+        return { source };
       }
     } else {
       // No Brave token available — still update the credits
@@ -333,9 +345,10 @@ export async function streamChat(
         'Developed by **Saksham** & **Ayan**',
       );
       onToken(updated);
-      return;
+      return { source };
     }
   }
 
   onToken(reply);
+  return { source };
 }

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { streamChat } from '../api/chat.ts';
 import type { ChatMessage, ChatError } from '../api/chat.ts';
+import { logUserQuery, type QueryStatus } from '../lib/queries.ts';
 
 export const SYSTEM_PROMPT = `You are Cyber AI, an elite cybersecurity assistant with decades of combined expertise \
 across offensive security, defensive operations, threat intelligence, and full-stack engineering. \
@@ -95,7 +96,7 @@ function computeMaxId(sessions: Session[]): number {
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
 
-export function useChat(storageScope = 'global') {
+export function useChat(storageScope = 'global', sessionToken?: string) {
   const storageKey = `${STORAGE_KEY}:${storageScope}`;
 
   // Compute initial sessions + activeSessionId together so they always agree.
@@ -244,7 +245,7 @@ export function useChat(storageScope = 'global') {
 
     let accumulated = '';
     try {
-      await streamChat(
+      const result = await streamChat(
         apiMessages,
         (token) => {
           accumulated += token;
@@ -267,12 +268,35 @@ export function useChat(storageScope = 'global') {
             : s
         ));
       }
+
+      // Record the query so admins can see what users asked for.
+      void logUserQuery({
+        query: trimmed,
+        source: result.source,
+        status: 'success',
+        userId: storageScope !== 'guest' ? storageScope : null,
+        sessionId: activeSessionId,
+        accessToken: sessionToken,
+      });
     } catch (err: unknown) {
       const chatErr = err as ChatError;
       // Don't show error for user-initiated cancellation
       if (chatErr.kind !== 'unknown' || chatErr.message !== 'Request cancelled.') {
         setError(chatErr);
       }
+
+      // Record failed queries too (cancelled vs errored).
+      const status: QueryStatus = chatErr.kind === 'unknown' && chatErr.message === 'Request cancelled.'
+        ? 'cancelled'
+        : 'error';
+      void logUserQuery({
+        query: trimmed,
+        source: 'primary',
+        status,
+        userId: storageScope !== 'guest' ? storageScope : null,
+        sessionId: activeSessionId,
+        accessToken: sessionToken,
+      });
     } finally {
       abortRef.current = null;
       setLoading(false);

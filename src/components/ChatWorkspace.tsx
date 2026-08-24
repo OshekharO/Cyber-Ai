@@ -9,14 +9,15 @@ import { useChat } from '../hooks/useChat.ts';
 
 interface ChatWorkspaceProps {
   userId: string;
+  sessionToken?: string | null;
   userLabel: string;
   isAdmin: boolean;
   onOpenAdmin: () => void;
   onSignOut: () => void;
 }
 
-export function ChatWorkspace({ userId, userLabel, isAdmin, onOpenAdmin, onSignOut }: ChatWorkspaceProps) {
-  const chat = useChat(userId);
+export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpenAdmin, onSignOut }: ChatWorkspaceProps) {
+  const chat = useChat(userId, sessionToken ?? undefined);
   const [input, setInput] = useState('');
 
   // Keyboard shortcuts
