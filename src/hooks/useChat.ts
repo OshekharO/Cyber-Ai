@@ -126,6 +126,8 @@ export function useChat(storageScope = 'global') {
   const abortRef = useRef<AbortController | null>(null);
   // Seed nextId from the initial sessions data so IDs never collide with persisted ones
   const nextId = useRef(computeMaxId(initRef.current.sessions) + 1);
+  // Stable ref to latest messages so callbacks don't need `messages` in their dep arrays
+  const messagesRef = useRef<Message[]>([]);
 
   // Persist sessions whenever they change
   useEffect(() => {
@@ -144,6 +146,7 @@ export function useChat(storageScope = 'global') {
     [sessions, activeSessionId],
   );
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
+  messagesRef.current = messages;
 
   // -- Session actions
 
@@ -232,8 +235,8 @@ export function useChat(storageScope = 'global') {
     const ctrl = new AbortController();
     abortRef.current = ctrl;
 
-    // Build API messages from updated session
-    const history = [...messages, userMsg];
+    // Build API messages from updated session (read from ref for stable callback identity)
+    const history = [...messagesRef.current, userMsg];
     const apiMessages: ChatMessage[] = [
       { role: 'system', content: SYSTEM_PROMPT },
       ...history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
@@ -275,7 +278,7 @@ export function useChat(storageScope = 'global') {
       setLoading(false);
       setStreamingContent('');
     }
-  }, [loading, messages, activeSessionId]);
+  }, [loading, activeSessionId]);
 
   const stopGenerating = useCallback(() => {
     abortRef.current?.abort();
@@ -284,16 +287,17 @@ export function useChat(storageScope = 'global') {
   const regenerate = useCallback(async () => {
     if (loading) return;
     // Find the last user message index using a reverse loop (O(n) without intermediate arrays)
+    const currentMessages = messagesRef.current;
     let lastUserIdx = -1;
-    for (let i = messages.length - 1; i >= 0; i--) {
-      if (messages[i].role === 'user') { lastUserIdx = i; break; }
+    for (let i = currentMessages.length - 1; i >= 0; i--) {
+      if (currentMessages[i].role === 'user') { lastUserIdx = i; break; }
     }
     if (lastUserIdx === -1) return;
-    const lastUserMsg = messages[lastUserIdx];
+    const lastUserMsg = currentMessages[lastUserIdx];
     // Drop the last user message and everything after, then re-send
     updateMessages(msgs => msgs.slice(0, lastUserIdx));
     await sendMessage(lastUserMsg.content);
-  }, [loading, messages, updateMessages, sendMessage]);
+  }, [loading, updateMessages, sendMessage]);
 
   // -- Theme
 
