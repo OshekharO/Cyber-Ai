@@ -3,101 +3,82 @@ title Cyber AI — Class Diagram
 
 skinparam classAttributeIconSize 0
 skinparam classFontSize 12
-skinparam classFontName Segoe UI
-skinparam defaultFontSize 12
 skinparam shadowing false
 skinparam linetype ortho
-skinparam nodesep 90
-skinparam ranksep 100
 
-' ══ Domain Entities ══════════════════════════════════════════════════════
+' ══ Database Entities ══════════════════════════════════════════════════════
 
-class User <<Entity>> {
-  - id: string
+class Profile <<Entity>> {
+  - id: uuid
   - email: string
   - fullName: string
-  - role: Role
+  - role: user | admin
+  - createdAt: string
+  - updatedAt: string
 }
+
+class UserQuery <<Entity>> {
+  - id: uuid
+  - userId: uuid
+  - query: string
+  - source: primary | brave
+  - status: success | error | cancelled
+  - sessionId: string
+  - createdAt: string
+}
+
+' ══ Local Storage ══════════════════════════════════════════════════════════
 
 class Session <<Entity>> {
   - id: string
   - name: string
-  - createdAt: DateTime
-  - updatedAt: DateTime
+  - createdAt: string
+  - updatedAt: string
 }
 
 class Message <<Entity>> {
   - id: number
-  - role: MessageRole
+  - role: user | assistant
   - content: string
-  - timestamp: DateTime
+  - timestamp: string
 }
 
-enum Role {
-  USER
-  ADMIN
-}
-
-enum MessageRole {
-  USER
-  ASSISTANT
-}
-
-' ══ Service Layer ════════════════════════════════════════════════════════
-
-class AuthService <<Service>> {
-  + signIn(email: string, password: string): Promise<User>
-  + signUp(email: string, password: string, fullName: string): Promise<User>
-  + signOut(): Promise<void>
-  + refreshSession(): Promise<void>
-}
-
-class ChatService <<Service>> {
-  + streamChat(messages: Message[], onToken: Callback): Promise<void>
-  - callBraveAPI(messages: Message[]): Promise<string>
-}
-
-' ══ Presentation Layer (React Hooks) ═════════════════════════════════════
+' ══ Hooks ══════════════════════════════════════════════════════════════════
 
 class useAuth <<Hook>> {
-  + user: User | null
+  + session: SupabaseSession | null
+  + profile: Profile | null
   + loading: boolean
-  + signIn(email: string, password: string): Promise<void>
+  + isAdmin: boolean
+  + signIn(email, password): Promise<void>
+  + signUp(email, password, fullName): Promise<void>
   + signOut(): Promise<void>
 }
 
 class useChat <<Hook>> {
   + sessions: Session[]
   + activeSession: Session
-  + sendMessage(text: string): Promise<void>
-  + deleteSession(id: string): void
+  + sendMessage(text): Promise<void>
+  + deleteSession(id): void
 }
 
-' ══ Admin ════════════════════════════════════════════════════════════════
-
 class AdminDashboard <<View>> {
-  + fetchUsers(): Promise<User[]>
-  + updateUserRole(userId: string, role: Role): Promise<void>
-  + deleteUser(userId: string): Promise<void>
+  + session: { access_token: string }
+  + profile: Profile
+  + loadUsers(): Promise<void>
+  + updateUserRole(userId, role): Promise<void>
+  + deleteUser(userId): Promise<void>
+  + loadQueries(): Promise<void>
 }
 
 ' ══ Relationships ════════════════════════════════════════════════════════
 
-Session "1" *-- "0..*" Message : contains
+Profile "1" -- "0..*" UserQuery : has
+Session "1" -- "0..*" Message : contains
 
-useAuth --> AuthService : delegates
-useAuth --> User : observes
-
-useChat --> ChatService : delegates
+useAuth --> Profile : manages
 useChat --> Session : manages
-
-AuthService ..> User : produces
-ChatService ..> Message : consumes
-
-AdminDashboard --> User : manages
-AdminDashboard ..> AuthService : uses
-
-User ..> Role
-Message ..> MessageRole
+AdminDashboard --> Profile : manages
+AdminDashboard --> UserQuery : manages
 
 @enduml
