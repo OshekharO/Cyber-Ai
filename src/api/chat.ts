@@ -1,3 +1,4 @@
+import { SYSTEM_PROMPT } from '../lib/prompts.ts';
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'https://ai-sqcn.onrender.com/api/chat';
 const BRAVE_API_URL = 'https://api.search.brave.com/res/v1/chat/completions';
 const CORS_PROXY = 'https://cors-bypasser-pro.vercel.app/';
@@ -81,14 +82,10 @@ async function callBraveAPI(
   }
 
   // Brave API fallback only supports a single message in the array.
-  // We take the last user message and prepend any system instructions.
+  // We take the last user message and prepend the system instructions.
   const lastUserMsg = messages.filter(m => m.role === 'user').pop();
-  const systemMsg = messages.find(m => m.role === 'system');
 
-  let finalContent = '';
-  if (systemMsg) {
-    finalContent += `INSTRUCTIONS: ${systemMsg.content}\n\n`;
-  }
+  let finalContent = `INSTRUCTIONS: ${SYSTEM_PROMPT}\n\n`;
   finalContent += lastUserMsg ? lastUserMsg.content : '';
 
   const braveMessages = [{
