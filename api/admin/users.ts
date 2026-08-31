@@ -63,9 +63,21 @@ async function requireAdmin(authorizationHeader: string | undefined) {
   return { user, profile };
 }
 
+async function logAudit(adminId: string, action: string, targetUserId: string, details: Record<string, unknown> = {}) {
+  await supabaseRequest('/rest/v1/admin_audit_log', {
+    method: 'POST',
+    body: JSON.stringify({
+      admin_id: adminId,
+      action,
+      target_user_id: targetUserId,
+      details,
+    }),
+  }, supabaseServiceRoleKey);
+}
+
 export default async function handler(req: any, res: any) {
   try {
-    await requireAdmin(req.headers.authorization);
+    const { user } = await requireAdmin(req.headers.authorization);
     const body = typeof req.body === 'string'
       ? JSON.parse(req.body)
       : req.body ?? {};
@@ -151,6 +163,8 @@ export default async function handler(req: any, res: any) {
         throw new Error(`Failed to update auth user (${authResponse.status}).`);
       }
 
+      void logAudit(user.id, 'update_role', userId, { role });
+
       json(res, 200, { ok: true });
       return;
     }
@@ -166,6 +180,8 @@ export default async function handler(req: any, res: any) {
       if (!authResponse.ok) {
         throw new Error(`Failed to delete user (${authResponse.status}).`);
       }
+
+      void logAudit(user.id, 'delete_user', userId);
 
       json(res, 200, { ok: true });
       return;

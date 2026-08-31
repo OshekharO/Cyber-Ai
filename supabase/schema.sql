@@ -120,3 +120,30 @@ create policy "Admins can read queries"
 on public.user_queries
 for select
 using (public.is_admin());
+
+-- ═══════════════════════════════════════════════════════════════════════════
+-- Admin audit log — records admin actions (role changes, user deletions)
+-- so admins can review who changed what and when.
+-- ═══════════════════════════════════════════════════════════════════════════
+
+create table if not exists public.admin_audit_log (
+  id uuid primary key default gen_random_uuid(),
+  admin_id uuid not null references auth.users (id) on delete set null,
+  action text not null,
+  target_user_id uuid not null references auth.users (id) on delete set null,
+  details jsonb,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists admin_audit_log_admin_id_idx on public.admin_audit_log (admin_id);
+create index if not exists admin_audit_log_target_user_id_idx on public.admin_audit_log (target_user_id);
+create index if not exists admin_audit_log_created_at_idx on public.admin_audit_log (created_at desc);
+
+alter table public.admin_audit_log enable row level security;
+
+-- Only admins may read the audit log.
+drop policy if exists "Admins can read audit log" on public.admin_audit_log;
+create policy "Admins can read audit log"
+on public.admin_audit_log
+for select
+using (public.is_admin());

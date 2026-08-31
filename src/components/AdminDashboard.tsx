@@ -32,10 +32,24 @@ interface AdminQuery {
   createdAt: string;
 }
 
-type AdminTab = 'users' | 'queries';
+interface AdminAuditLog {
+  id: string;
+  adminId: string;
+  adminEmail: string | null;
+  adminName: string | null;
+  action: string;
+  targetUserId: string;
+  targetEmail: string | null;
+  targetName: string | null;
+  details: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+type AdminTab = 'users' | 'queries' | 'audit';
 
 const PAGE_SIZE = 5;
 const QUERY_PAGE_SIZE = 50;
+const AUDIT_PAGE_SIZE = 50;
 
 export function AdminDashboard({ session, profile, onBackToChat, onSignOut, notice }: AdminDashboardProps) {
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -53,6 +67,11 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   const [querySource, setQuerySource] = useState<'all' | 'primary' | 'brave'>('all');
   const [queryError, setQueryError] = useState<string | null>(null);
   const [queryPage, setQueryPage] = useState(1);
+
+  const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>([]);
+  const [loadingAudit, setLoadingAudit] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
+  const [auditPage, setAuditPage] = useState(1);
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
     const id = crypto.randomUUID();
@@ -124,6 +143,40 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
       void loadQueries();
     }
   }, [tab, loadQueries]);
+
+  const loadAuditLogs = useCallback(async () => {
+    setLoadingAudit(true);
+    setAuditError(null);
+
+    try {
+      const params = new URLSearchParams({
+        page: String(auditPage),
+        perPage: String(AUDIT_PAGE_SIZE),
+      });
+
+      const response = await fetch(`/api/admin/audit?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null) as { error?: string } | null;
+        throw new Error(payload?.error ?? `Failed to load audit log (${response.status}).`);
+      }
+
+      const payload = await response.json() as { logs: AdminAuditLog[] };
+      setAuditLogs(payload.logs);
+    } catch (err) {
+      setAuditError(err instanceof Error ? err.message : 'Unable to load audit log.');
+    } finally {
+      setLoadingAudit(false);
+    }
+  }, [session.access_token, auditPage]);
+
+  useEffect(() => {
+    if (tab === 'audit') {
+      void loadAuditLogs();
+    }
+  }, [tab, loadAuditLogs]);
 
   const filteredUsers = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -248,6 +301,12 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
             onClick={() => setTab('queries')}
           >
             User Queries
+          </button>
+          <button
+            className={`adm-tab ${tab === 'audit' ? 'adm-tab--active' : ''}`}
+            onClick={() => setTab('audit')}
+          >
+            Audit Log
           </button>
         </div>
       </nav>
@@ -516,6 +575,105 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
                     className="adm-pagination-btn"
                     onClick={() => setQueryPage((p) => p + 1)}
                     disabled={queries.length < QUERY_PAGE_SIZE}
+                    aria-label="Next page"
+                  >
+                    →
+                  </button>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {tab === 'audit' && (
+            <section className="adm-stats" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div className="adm-toolbar">
+                <button
+                  className="adm-btn adm-btn--primary"
+                  onClick={() => void loadAuditLogs()}
+                  disabled={loadingAudit}
+                >
+                  {loadingAudit ? 'Refreshing...' : 'Refresh'}
+                </button>
+              </div>
+
+              {auditError && <div className="adm-error" role="alert">{auditError}</div>}
+
+              <div className="adm-table-wrap">
+                <table className="adm-table">
+                  <thead>
+                    <tr>
+                      <th>When</th>
+                      <th>Admin</th>
+                      <th>Action</th>
+                      <th>Target User</th>
+                      <th>Details</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loadingAudit ? (
+                      Array.from({ length: 6 }).map((_, index) => (
+                        <tr key={`audit-skeleton-${index}`} className="adm-skeleton-row">
+                          <td data-label="When"><div className="adm-skeleton-cell adm-skeleton-cell--medium" /></td>
+                          <td data-label="Admin"><div className="adm-skeleton-cell adm-skeleton-cell--medium" /></td>
+                          <td data-label="Action"><div className="adm-skeleton-cell adm-skeleton-cell--short" /></td>
+                          <td data-label="Target User"><div className="adm-skeleton-cell adm-skeleton-cell--medium" /></td>
+                          <td data-label="Details"><div className="adm-skeleton-cell adm-skeleton-cell--long" /></td>
+                        </tr>
+                      ))
+                    ) : auditLogs.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="adm-empty">No audit log entries found.</td>
+                      </tr>
+                    ) : (
+                      auditLogs.map((item) => (
+                        <tr key={item.id}>
+                          <td data-label="When">{new Date(item.createdAt).toLocaleString()}</td>
+                          <td data-label="Admin">
+                            <div className="adm-user-cell">
+                              <strong>{item.adminName ?? 'Unknown'}</strong>
+                              <span>{item.adminEmail ?? item.adminId}</span>
+                            </div>
+                          </td>
+                          <td data-label="Action">
+                            <span className={`adm-badge adm-badge--${item.action === 'update_role' ? 'primary' : item.action === 'delete_user' ? 'error' : 'success'}`}>
+                              {item.action.replace(/_/g, ' ')}
+                            </span>
+                          </td>
+                          <td data-label="Target User">
+                            <div className="adm-user-cell">
+                              <strong>{item.targetName ?? 'Unknown'}</strong>
+                              <span>{item.targetEmail ?? item.targetUserId}</span>
+                            </div>
+                          </td>
+                          <td data-label="Details" className="adm-query-cell">
+                            {item.details && Object.keys(item.details).length > 0
+                              ? JSON.stringify(item.details)
+                              : '—'}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="adm-pagination">
+                <div className="adm-pagination-info">
+                  Showing {auditLogs.length} entr{(auditLogs.length === 1 ? 'y' : 'ies')}
+                </div>
+                <div className="adm-pagination-controls">
+                  <button
+                    className="adm-pagination-btn"
+                    onClick={() => setAuditPage((p) => Math.max(1, p - 1))}
+                    disabled={auditPage === 1}
+                    aria-label="Previous page"
+                  >
+                    ←
+                  </button>
+                  <button
+                    className="adm-pagination-btn"
+                    onClick={() => setAuditPage((p) => p + 1)}
+                    disabled={auditLogs.length < AUDIT_PAGE_SIZE}
                     aria-label="Next page"
                   >
                     →
