@@ -13,7 +13,7 @@ function buildUrl(path: string, query?: Record<string, string | number | undefin
   return url;
 }
 
-function json(res: any, status: number, payload: unknown) {
+function json(res: { status: (code: number) => { json: (data: unknown) => void }; setHeader: (name: string, value: string) => void }, status: number, payload: unknown) {
   res.status(status).json(payload);
 }
 
@@ -29,35 +29,42 @@ async function supabaseRequest(path: string, init: RequestInit = {}, token?: str
   });
 }
 
+class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 async function requireAdmin(authorizationHeader: string | undefined) {
   const token = authorizationHeader?.startsWith('Bearer ')
     ? authorizationHeader.slice('Bearer '.length)
     : null;
 
   if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('Supabase server environment variables are missing.');
+    throw new ApiError(500, 'Supabase server environment variables are missing.');
   }
 
   if (!token) {
-    throw new Error('Missing bearer token.');
+    throw new ApiError(401, 'Missing bearer token.');
   }
 
   const userResponse = await supabaseRequest('/auth/v1/user', { method: 'GET' }, token);
   if (!userResponse.ok) {
-    throw new Error('Unable to validate the current session.');
+    throw new ApiError(401, 'Unable to validate the current session.');
   }
 
   const user = await userResponse.json() as { id: string };
   const profileResponse = await supabaseRequest(`/rest/v1/profiles?select=id,role&id=eq.${user.id}`, { method: 'GET' }, token);
   if (!profileResponse.ok) {
-    throw new Error('Unable to load the current profile.');
+    throw new ApiError(401, 'Unable to load the current profile.');
   }
 
   const profiles = await profileResponse.json() as Array<{ id: string; role: string }>;
   const profile = profiles[0];
 
   if (!profile || profile.role !== 'admin') {
-    throw new Error('Admin access required.');
+    throw new ApiError(403, 'Admin access required.');
   }
 
   return { user, profile };
@@ -72,7 +79,7 @@ interface AuditLogRow {
   created_at: string;
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: { method: string; query?: Record<string, string>; headers: { authorization?: string } }, res: { status: (code: number) => { json: (data: unknown) => void }; setHeader: (name: string, value: string) => void }) {
   try {
     await requireAdmin(req.headers.authorization);
 
@@ -85,6 +92,7 @@ export default async function handler(req: any, res: any) {
     const page = Math.max(Number(req.query?.page ?? 1) || 1, 1);
     const perPage = Math.min(Math.max(Number(req.query?.perPage ?? 50) || 50, 1), 200);
 
+
     const params: Record<string, string | number | undefined> = {
       select: 'id,admin_id,action,target_user_id,details,created_at',
       order: 'created_at.desc',
@@ -92,9 +100,10 @@ export default async function handler(req: any, res: any) {
       offset: (page - 1) * perPage,
     };
 
-    const listResponse = await supabaseRequest('/rest/v1/admin_audit_log', { method: 'GET' }, supabaseServiceRoleKey);
+    const queryParams = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString();
+    const listResponse = await supabaseRequest(`/rest/v1/admin_audit_log?${queryParams}`, { method: 'GET' }, supabaseServiceRoleKey);
     if (!listResponse.ok) {
-      throw new Error(`Failed to load audit log (${listResponse.status}).`);
+      throw new ApiError(500, `Failed to load audit log.`);
     }
 
     const rows = await listResponse.json() as AuditLogRow[];
@@ -103,7 +112,7 @@ export default async function handler(req: any, res: any) {
     const targetIds = Array.from(new Set(rows.map((row) => row.target_user_id).filter(Boolean)));
     const allIds = [...adminIds, ...targetIds];
 
-    let profilesMap = new Map<string, { email: string | null; full_name: string | null }>();
+    const profilesMap = new Map<string, { email: string | null; full_name: string | null }>();
     if (allIds.length > 0) {
       const profilesResponse = await supabaseRequest(
         `/rest/v1/profiles?select=id,email,full_name&id=in.(${allIds.join(',')})`,
@@ -136,17 +145,11 @@ export default async function handler(req: any, res: any) {
       perPage,
     });
   } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unauthorized.';
-    const status = message.includes('Supabase server environment variables are missing')
-      ? 500
-      : message.includes('Admin access required')
-        ? 403
-        : message.includes('Missing bearer token')
-          ? 401
-          : message.includes('Unable to validate the current session')
-            ? 401
-            : 500;
-
-    json(res, status, { error: message });
+    if (err instanceof ApiError) {
+      json(res, err.status, { error: err.message });
+    } else {
+      console.error('Unhandled API Error:', err);
+      json(res, 500, { error: 'Internal Server Error' });
+    }
   }
 }
