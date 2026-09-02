@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { streamChat } from '../api/chat.ts';
 import type { ChatMessage, ChatError } from '../api/chat.ts';
 import { logUserQuery, type QueryStatus } from '../lib/queries.ts';
+import { SYSTEM_PROMPT } from '../lib/prompts.ts';
 
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -210,7 +211,10 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
 
     // Build API messages from updated session (read from ref for stable callback identity)
     const history = [...messagesRef.current, userMsg];
-    const apiMessages: ChatMessage[] = history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content }));
+    const apiMessages: ChatMessage[] = [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+    ];
 
     let accumulated = '';
     try {
