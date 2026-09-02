@@ -2,6 +2,10 @@ import { SYSTEM_PROMPT } from '../lib/prompts.ts';
 const API_URL = (import.meta.env.VITE_REQUESTY_API_URL as string | undefined) ?? 'https://router.requesty.ai/v1/chat/completions';
 const API_TOKEN = import.meta.env.VITE_REQUESTY_API_TOKEN as string | undefined;
 const API_MODEL = (import.meta.env.VITE_REQUESTY_MODEL as string | undefined) ?? 'nemotron-3-super-120b-a12b';
+const API_FALLBACK_MODELS = [
+  'nemotron-3.5-lightning-30b-a3b',
+  'nemotron-3-ultra-550b-a55b',
+];
 const BRAVE_API_URL = 'https://api.search.brave.com/res/v1/chat/completions';
 const CORS_PROXY = 'https://cors-bypasser-pro.vercel.app/';
 const BRAVE_API_TOKEN = import.meta.env.VITE_BRAVE_API_TOKEN as string | undefined;
@@ -135,6 +139,44 @@ async function callBraveAPI(
 }
 
 /**
+ * Try each model in order until one succeeds or all fail.
+ * Returns the response and the model that worked.
+ */
+async function tryModels(messages: ChatMessage[], signal: AbortSignal): Promise<{ res: Response; model: string }> {
+  const models = [API_MODEL, ...API_FALLBACK_MODELS];
+  let lastRes: Response | undefined;
+
+  for (const model of models) {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {}),
+      },
+      body: JSON.stringify({ model, messages, stream: true }),
+      signal,
+    });
+
+    if (res.ok) {
+      return { res, model };
+    }
+
+    // 404 means model not found — try next model
+    if (res.status === 404) {
+      lastRes = res;
+      continue;
+    }
+
+    // Other error — stop trying
+    return { res, model };
+  }
+
+  // All models failed
+  return { res: lastRes ?? new Response(null, { status: 404 }), model: models[0] };
+}
+
+/**
  * Sends messages to the API. Calls `onToken` for each streamed chunk.
  * Falls back to a single-chunk call if the API returns JSON (non-streaming).
  * If the primary API fails, falls back to Brave Search API.
@@ -160,16 +202,8 @@ export async function streamChat(
     : signal; // fallback for older runtimes without AbortSignal.any
 
   try {
-    res = await fetch(API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {}),
-      },
-      body: JSON.stringify({ model: API_MODEL, messages, stream: true }),
-      signal: combinedSignal,
-    });
+    const result = await tryModels(messages, combinedSignal);
+    res = result.res;
   } catch (err) {
     // Primary API failed, try Brave fallback
     useFallback = true;
@@ -179,8 +213,8 @@ export async function streamChat(
   }
 
   if (!useFallback && res && !res.ok) {
-    // Check if we should use fallback for certain errors
-    if (res.status === 429 || res.status >= 500) {
+    // Fallback to Brave for rate limits, server errors, or model not found (404)
+    if (res.status === 404 || res.status === 429 || res.status >= 500) {
       useFallback = true;
     } else {
       throw classifyError(null, res.status);

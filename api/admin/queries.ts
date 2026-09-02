@@ -102,7 +102,7 @@ export default async function handler(req: any, res: any) {
       params.source = `eq.${source}`;
     }
 
-    const listResponse = await supabaseRequest('/rest/v1/user_queries', { method: 'GET' }, supabaseServiceRoleKey);
+    const listResponse = await supabaseRequest(`/rest/v1/user_queries?${new URLSearchParams(params as Record<string, string>).toString()}`, { method: 'GET' }, supabaseServiceRoleKey);
     if (!listResponse.ok) {
       throw new Error(`Failed to load queries (${listResponse.status}).`);
     }
