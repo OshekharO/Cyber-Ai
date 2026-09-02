@@ -1,5 +1,7 @@
 import { SYSTEM_PROMPT } from '../lib/prompts.ts';
-const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'https://ai-sqcn.onrender.com/api/chat';
+const API_URL = (import.meta.env.VITE_REQUESTY_API_URL as string | undefined) ?? 'https://router.requesty.ai/v1/chat/completions';
+const API_TOKEN = import.meta.env.VITE_REQUESTY_API_TOKEN as string | undefined;
+const API_MODEL = (import.meta.env.VITE_REQUESTY_MODEL as string | undefined) ?? 'nemotron-3-super-120b-a12b';
 const BRAVE_API_URL = 'https://api.search.brave.com/res/v1/chat/completions';
 const CORS_PROXY = 'https://cors-bypasser-pro.vercel.app/';
 const BRAVE_API_TOKEN = import.meta.env.VITE_BRAVE_API_TOKEN as string | undefined;
@@ -163,9 +165,9 @@ export async function streamChat(
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'X-Client': 'Cyber-AI-Frontend',
+        ...(API_TOKEN ? { Authorization: `Bearer ${API_TOKEN}` } : {}),
       },
-      body: JSON.stringify({ messages, stream: true }),
+      body: JSON.stringify({ model: API_MODEL, messages, stream: true }),
       signal: combinedSignal,
     });
   } catch (err) {
