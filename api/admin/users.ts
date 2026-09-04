@@ -86,7 +86,7 @@ export default async function handler(req: any, res: any) {
       const page = Math.max(Number(req.query?.page ?? 1) || 1, 1);
       const perPage = Math.min(Math.max(Number(req.query?.perPage ?? 100) || 100, 1), 200);
 
-      const listResponse = await supabaseRequest('/auth/v1/admin/users', { method: 'GET' }, supabaseServiceRoleKey);
+      const listResponse = await supabaseRequest('/auth/v1/admin/users?per_page=1000', { method: 'GET' }, supabaseServiceRoleKey);
       if (!listResponse.ok) {
         throw new Error(`Failed to load users (${listResponse.status}).`);
       }
