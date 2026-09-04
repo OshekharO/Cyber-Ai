@@ -48,7 +48,6 @@ interface AdminAuditLog {
 type AdminTab = 'users' | 'queries' | 'audit';
 
 const PAGE_SIZE = 5;
-const QUERY_PAGE_SIZE = 50;
 const AUDIT_PAGE_SIZE = 50;
 
 export function AdminDashboard({ session, profile, onBackToChat, onSignOut, notice }: AdminDashboardProps) {
@@ -67,6 +66,7 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   const [querySource, setQuerySource] = useState<'all' | 'primary' | 'brave'>('all');
   const [queryError, setQueryError] = useState<string | null>(null);
   const [queryPage, setQueryPage] = useState(1);
+  const [queryTotalPages, setQueryTotalPages] = useState(1);
 
   const [auditLogs, setAuditLogs] = useState<AdminAuditLog[]>([]);
   const [loadingAudit, setLoadingAudit] = useState(false);
@@ -114,8 +114,8 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
 
     try {
       const params = new URLSearchParams({
-        page: String(queryPage),
-        perPage: String(QUERY_PAGE_SIZE),
+        page: '1',
+        perPage: '200',
       });
       if (querySearch.trim()) params.set('q', querySearch.trim());
       if (querySource !== 'all') params.set('source', querySource);
@@ -131,12 +131,18 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
 
       const payload = await response.json() as { queries: AdminQuery[] };
       setQueries(payload.queries);
+      setQueryTotalPages(Math.max(1, Math.ceil(payload.queries.length / PAGE_SIZE)));
     } catch (err) {
       setQueryError(err instanceof Error ? err.message : 'Unable to load queries.');
     } finally {
       setLoadingQueries(false);
     }
-  }, [session.access_token, queryPage, querySearch, querySource]);
+  }, [session.access_token, querySearch, querySource]);
+
+  useEffect(() => {
+    setQueryPage(1);
+    setQueryTotalPages(1);
+  }, [querySearch, querySource]);
 
   useEffect(() => {
     if (tab === 'queries') {
@@ -198,13 +204,25 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
     return filteredUsers.slice(start, end);
   }, [filteredUsers, currentPage]);
 
+  const filteredQueries = useMemo(() => {
+    const needle = querySearch.trim().toLowerCase();
+    if (!needle && querySource === 'all') return queries;
+    return queries.filter(item => {
+      const matchesSearch = !needle || [item.query, item.email, item.fullName, item.userId].some(value => value?.toLowerCase().includes(needle));
+      const matchesSource = querySource === 'all' || item.source === querySource;
+      return matchesSearch && matchesSource;
+    });
+  }, [queries, querySearch, querySource]);
+
+  const paginatedQueries = useMemo(() => {
+    const start = (queryPage - 1) * PAGE_SIZE;
+    const end = start + PAGE_SIZE;
+    return filteredQueries.slice(start, end);
+  }, [filteredQueries, queryPage]);
+
   useEffect(() => {
     setCurrentPage(1);
   }, [query]);
-
-  useEffect(() => {
-    setQueryPage(1);
-  }, [querySearch, querySource]);
 
   const updateRole = async (userId: string, role: 'user' | 'admin') => {
     setSavingId(userId);
@@ -418,6 +436,7 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
               </div>
 
               {!loading && filteredUsers.length > 0 && (
+              {!loadingQueries && filteredQueries.length > 0 && (
                 <div className="adm-pagination">
                   <div className="adm-pagination-info">
                     Showing {((currentPage - 1) * PAGE_SIZE) + 1}–{Math.min(currentPage * PAGE_SIZE, filteredUsers.length)} of {filteredUsers.length} users
@@ -527,12 +546,12 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
                           <td data-label="Asked at"><div className="adm-skeleton-cell adm-skeleton-cell--medium" /></td>
                         </tr>
                       ))
-                    ) : queries.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="adm-empty">No queries found.</td>
-                      </tr>
-                    ) : (
-                      queries.map((item) => (
+                     ) : paginatedQueries.length === 0 ? (
+                       <tr>
+                         <td colSpan={5} className="adm-empty">No queries found.</td>
+                       </tr>
+                     ) : (
+                       paginatedQueries.map((item) => (
                         <tr key={item.id}>
                           <td data-label="User">
                             <div className="adm-user-cell">
@@ -557,30 +576,55 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
                 </table>
               </div>
 
-              <div className="adm-pagination">
-                <div className="adm-pagination-info">
-                  Showing {queries.length} quer{(queries.length === 1 ? 'y' : 'ies')}
-                  {querySearch.trim() || querySource !== 'all' ? ' (filtered)' : ''}
-                </div>
-                <div className="adm-pagination-controls">
+              {!loadingQueries && filteredQueries.length > 0 && (
+                <div className="adm-pagination">
+                  <div className="adm-pagination-info">
+                    Showing {((queryPage - 1) * PAGE_SIZE) + 1}–{Math.min(queryPage * PAGE_SIZE, filteredQueries.length)} of {filteredQueries.length} queries
+                  </div>
+                  <div className="adm-pagination-controls">
                   <button
                     className="adm-pagination-btn"
-                    onClick={() => setQueryPage((p) => Math.max(1, p - 1))}
+                    onClick={() => setQueryPage(p => Math.max(1, p - 1))}
                     disabled={queryPage === 1}
                     aria-label="Previous page"
                   >
                     ←
                   </button>
+                  {Array.from({ length: queryTotalPages }).map((_, idx) => {
+                    const page = idx + 1;
+                    if (
+                      page === 1 ||
+                      page === queryTotalPages ||
+                      (page >= queryPage - 1 && page <= queryPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          className={`adm-pagination-btn ${page === queryPage ? 'adm-pagination-btn--active' : ''}`}
+                          onClick={() => setQueryPage(page)}
+                          aria-label={`Go to page ${page}`}
+                          aria-current={page === queryPage ? 'page' : undefined}
+                        >
+                          {page}
+                        </button>
+                      );
+                    }
+                    if (page === 2 || page === queryTotalPages - 1) {
+                      return <span key={page} className="adm-pagination-ellipsis">…</span>;
+                    }
+                    return null;
+                  })}
                   <button
                     className="adm-pagination-btn"
-                    onClick={() => setQueryPage((p) => p + 1)}
-                    disabled={queries.length < QUERY_PAGE_SIZE}
+                    onClick={() => setQueryPage(p => Math.min(queryTotalPages, p + 1))}
+                    disabled={queryPage === queryTotalPages}
                     aria-label="Next page"
                   >
                     →
                   </button>
                 </div>
               </div>
+              )}
             </section>
           )}
 
