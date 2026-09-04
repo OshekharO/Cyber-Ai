@@ -77,8 +77,45 @@ drop policy if exists "Users can update their profile" on public.profiles;
 create policy "Users can update their profile"
 on public.profiles
 for update
-using (auth.uid() = id or public.is_admin())
-with check (auth.uid() = id or public.is_admin());
+using (auth.uid() = id)
+with check (auth.uid() = id);
+
+drop policy if exists "Admins can update any profile" on public.profiles;
+create policy "Admins can update any profile"
+on public.profiles
+for update
+using (public.is_admin())
+with check (public.is_admin());
+
+create or replace function public.prevent_unauthorized_role_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if TG_OP = 'INSERT' then
+    if new.role = 'admin' and not public.is_admin() then
+      raise exception 'Only admins can create admin profiles';
+    end if;
+    return new;
+  end if;
+
+  if TG_OP = 'UPDATE' then
+    if old.role is distinct from new.role and not public.is_admin() then
+      raise exception 'Only admins can change user roles';
+    end if;
+    return new;
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists prevent_unauthorized_role_change on public.profiles;
+create trigger prevent_unauthorized_role_change
+before insert or update on public.profiles
+for each row execute function public.prevent_unauthorized_role_change();
 
 drop policy if exists "Users can insert their profile" on public.profiles;
 create policy "Users can insert their profile"
