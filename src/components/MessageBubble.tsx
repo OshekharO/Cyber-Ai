@@ -135,7 +135,7 @@ function makeComponents(theme: 'dark' | 'light'): Components {
   };
 }
 
-// Statically instantiated at module scope to avoid object allocation and re-renders
+// Statically instantiated at module scope to avoid per-render object allocation and hook overhead
 // during high-frequency AI streaming token updates.
 const DARK_COMPONENTS = makeComponents('dark');
 const LIGHT_COMPONENTS = makeComponents('light');
