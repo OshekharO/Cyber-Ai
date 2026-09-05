@@ -1,0 +1,3 @@
+## 2025-05-18 - Static Markdown components allocation optimization
+**Learning:** Instantiating component override objects for `react-markdown` inside component render functions—even with `useMemo`—still executes factory closures or recreates references when theme changes and adds unnecessary overhead during high-frequency AI response streaming (dozens of token state updates per second).
+**Action:** Extract static component override objects (`DARK_COMPONENTS` and `LIGHT_COMPONENTS`) to module scope when the component functions do not depend on closure state or dynamic props beyond discrete theme modes.
