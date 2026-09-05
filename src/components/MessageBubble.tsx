@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, memo } from 'react';
+import { useState, useCallback, memo } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -135,6 +135,11 @@ function makeComponents(theme: 'dark' | 'light'): Components {
   };
 }
 
+// Statically instantiated at module scope to avoid per-render object allocation and hook overhead
+// during high-frequency AI streaming token updates.
+const DARK_COMPONENTS = makeComponents('dark');
+const LIGHT_COMPONENTS = makeComponents('light');
+
 // ── Message actions bar ───────────────────────────────────────────────────────
 
 interface ActionsProps {
@@ -214,7 +219,8 @@ interface MessageBubbleProps {
 
 function MessageBubbleInner({ message, isLast, theme, onFeedback, onRegenerate }: MessageBubbleProps) {
   const isUser = message.role === 'user';
-  const components = useMemo(() => makeComponents(theme), [theme]);
+  // Use pre-instantiated static component overrides to avoid garbage collection pressure during streaming updates.
+  const components = theme === 'dark' ? DARK_COMPONENTS : LIGHT_COMPONENTS;
 
   return (
     <div className={`message ${isUser ? 'user' : 'ai'}`}>
@@ -268,7 +274,8 @@ interface StreamingBubbleProps {
 }
 
 export function StreamingBubble({ content, theme }: StreamingBubbleProps) {
-  const components = useMemo(() => makeComponents(theme), [theme]);
+  // Use pre-instantiated static component overrides to avoid garbage collection pressure during streaming updates.
+  const components = theme === 'dark' ? DARK_COMPONENTS : LIGHT_COMPONENTS;
 
   return (
     <div className="message ai">
