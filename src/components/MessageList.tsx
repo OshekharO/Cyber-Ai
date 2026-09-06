@@ -64,14 +64,13 @@ export function MessageList({
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  // Filter messages by search query
-  const visibleMessages = useMemo<Message[]>(
-    () =>
-      searchQuery.trim()
-        ? messages.filter(m => m.content.toLowerCase().includes(searchQuery.toLowerCase()))
-        : messages,
-    [messages, searchQuery],
-  );
+  // Filter messages by search query safely and efficiently.
+  // Lowercase normalized query is computed once per search input update.
+  const visibleMessages = useMemo<Message[]>(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return messages;
+    return messages.filter(m => m.content.toLowerCase().includes(query));
+  }, [messages, searchQuery]);
 
   return (
     <div
