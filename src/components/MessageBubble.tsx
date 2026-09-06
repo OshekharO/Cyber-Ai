@@ -140,6 +140,10 @@ function makeComponents(theme: 'dark' | 'light'): Components {
 const DARK_COMPONENTS = makeComponents('dark');
 const LIGHT_COMPONENTS = makeComponents('light');
 
+// Hoist remarkPlugins array to module scope to avoid creating a new array reference on every render,
+// preventing react-markdown from re-initializing its remark/rehype processor pipeline on every streaming token update.
+const REMARK_PLUGINS = [remarkGfm];
+
 // ── Message actions bar ───────────────────────────────────────────────────────
 
 interface ActionsProps {
@@ -234,7 +238,7 @@ function MessageBubbleInner({ message, isLast, theme, onFeedback, onRegenerate }
             <div className="user-text">{message.content}</div>
           ) : (
             <Markdown
-              remarkPlugins={[remarkGfm]}
+              remarkPlugins={REMARK_PLUGINS}
               components={components}
             >
               {message.content}
@@ -284,7 +288,7 @@ export function StreamingBubble({ content, theme }: StreamingBubbleProps) {
       </div>
       <div className="message-body">
         <div className="bubble bubble--ai bubble--streaming">
-          <Markdown remarkPlugins={[remarkGfm]} components={components}>
+          <Markdown remarkPlugins={REMARK_PLUGINS} components={components}>
             {content}
           </Markdown>
           <span className="streaming-cursor" aria-hidden="true">▋</span>
