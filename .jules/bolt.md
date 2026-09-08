@@ -1,3 +1,0 @@
-## 2025-05-20 - Memoized custom hook callback stability during AI token streaming
-**Learning:** Returning fresh callback function references from custom React state hooks (like `useChat`) on every token update invalidates `React.memo` wrapping on child UI components (such as `Sidebar`, `Header`, and `InputBar`). Using `useCallback` along with `useRef` synchronization for volatile state parameters inside hook callbacks ensures stable function references and prevents cascading re-renders during high-frequency streaming updates.
-**Action:** Always maintain stable function identities for hook callbacks passed into `React.memo` components, using `useRef` to store latest state variables when callbacks need access to up-to-date values without re-creating functions.
