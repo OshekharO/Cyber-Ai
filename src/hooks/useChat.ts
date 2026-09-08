@@ -93,12 +93,22 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // -- Refs
+  // -- Refs for stable callbacks across high-frequency streaming token renders
   const abortRef = useRef<AbortController | null>(null);
-  // Seed nextId from initial sessions data so IDs never collide with persisted ones
   const nextId = useRef(computeMaxId(initialData.sessions) + 1);
-  // Stable ref to latest messages so callbacks don't need `messages` in their dep arrays
   const messagesRef = useRef<Message[]>([]);
+  const activeSessionIdRef = useRef(activeSessionId);
+  const loadingRef = useRef(loading);
+  const storageScopeRef = useRef(storageScope);
+  const storageKeyRef = useRef(storageKey);
+  const sessionTokenRef = useRef(sessionToken);
+
+  // Keep refs synchronized in effects to guarantee callbacks have stable identities
+  useEffect(() => { activeSessionIdRef.current = activeSessionId; }, [activeSessionId]);
+  useEffect(() => { loadingRef.current = loading; }, [loading]);
+  useEffect(() => { storageScopeRef.current = storageScope; }, [storageScope]);
+  useEffect(() => { storageKeyRef.current = storageKey; }, [storageKey]);
+  useEffect(() => { sessionTokenRef.current = sessionToken; }, [sessionToken]);
 
   // Persist sessions whenever they change
   useEffect(() => {
@@ -118,12 +128,15 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
   );
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
 
+  const activeSessionRef = useRef(activeSession);
+  useEffect(() => { activeSessionRef.current = activeSession; }, [activeSession]);
+
   // Keep messagesRef updated in effect to avoid ref assignment during render
   useEffect(() => {
     messagesRef.current = messages;
   }, [messages]);
 
-  // -- Session actions
+  // -- Session actions (memoized with stable references to prevent unnecessary child re-renders)
 
   const newSession = useCallback(() => {
     const s = createSession();
@@ -152,29 +165,32 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
         setActiveSessionId(fresh.id);
         return [fresh];
       }
-      if (id === activeSessionId) {
-        setActiveSessionId(next[0].id);
-      }
+      setActiveSessionId(currentActiveId => {
+        if (id === currentActiveId) {
+          return next[0].id;
+        }
+        return currentActiveId;
+      });
       return next;
     });
-  }, [activeSessionId]);
+  }, []);
 
   const clearMessages = useCallback(() => {
     setSessions(prev => prev.map(s =>
-      s.id === activeSessionId ? { ...s, messages: [], updatedAt: new Date().toISOString() } : s
+      s.id === activeSessionIdRef.current ? { ...s, messages: [], updatedAt: new Date().toISOString() } : s
     ));
     setError(null);
-  }, [activeSessionId]);
+  }, []);
 
   // -- Message actions
 
   const updateMessages = useCallback((updater: (msgs: Message[]) => Message[]) => {
     setSessions(prev => prev.map(s =>
-      s.id === activeSessionId
+      s.id === activeSessionIdRef.current
         ? { ...s, messages: updater(s.messages), updatedAt: new Date().toISOString() }
         : s
     ));
-  }, [activeSessionId]);
+  }, []);
 
   const setFeedback = useCallback((msgId: number, fb: 'up' | 'down') => {
     updateMessages(msgs =>
@@ -186,7 +202,7 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
 
   const sendMessage = useCallback(async (text: string) => {
     const trimmed = text.trim();
-    if (!trimmed || loading) return;
+    if (!trimmed || loadingRef.current) return;
 
     setError(null);
     const userMsg: Message = {
@@ -196,9 +212,13 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
       timestamp: new Date().toISOString(),
     };
 
+    const currentSessionId = activeSessionIdRef.current;
+    const currentScope = storageScopeRef.current;
+    const currentToken = sessionTokenRef.current;
+
     // Auto-name session from first message
     setSessions(prev => prev.map(s => {
-      if (s.id !== activeSessionId) return s;
+      if (s.id !== currentSessionId) return s;
       const isFirst = s.messages.length === 0;
       const name = isFirst ? trimmed.slice(0, 40) + (trimmed.length > 40 ? '…' : '') : s.name;
       return { ...s, name, messages: [...s.messages, userMsg], updatedAt: new Date().toISOString() };
@@ -237,7 +257,7 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
           timestamp: new Date().toISOString(),
         };
         setSessions(prev => prev.map(s =>
-          s.id === activeSessionId
+          s.id === currentSessionId
             ? { ...s, messages: [...s.messages, aiMsg], updatedAt: new Date().toISOString() }
             : s
         ));
@@ -248,9 +268,9 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
         query: trimmed,
         source: result.source,
         status: 'success',
-        userId: storageScope !== 'guest' ? storageScope : null,
-        sessionId: activeSessionId,
-        accessToken: sessionToken,
+        userId: currentScope !== 'guest' ? currentScope : null,
+        sessionId: currentSessionId,
+        accessToken: currentToken,
       });
     } catch (err: unknown) {
       const chatErr = err as ChatError;
@@ -267,23 +287,23 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
         query: trimmed,
         source: 'primary',
         status,
-        userId: storageScope !== 'guest' ? storageScope : null,
-        sessionId: activeSessionId,
-        accessToken: sessionToken,
+        userId: currentScope !== 'guest' ? currentScope : null,
+        sessionId: currentSessionId,
+        accessToken: currentToken,
       });
     } finally {
       abortRef.current = null;
       setLoading(false);
       setStreamingContent('');
     }
-  }, [loading, activeSessionId, storageScope, sessionToken]);
+  }, []);
 
   const stopGenerating = useCallback(() => {
     abortRef.current?.abort();
   }, []);
 
   const regenerate = useCallback(async () => {
-    if (loading) return;
+    if (loadingRef.current) return;
     // Find the last user message index using a reverse loop (O(n) without intermediate arrays)
     const currentMessages = messagesRef.current;
     let lastUserIdx = -1;
@@ -295,7 +315,7 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     // Drop the last user message and everything after, then re-send
     updateMessages(msgs => msgs.slice(0, lastUserIdx));
     await sendMessage(lastUserMsg.content);
-  }, [loading, updateMessages, sendMessage]);
+  }, [updateMessages, sendMessage]);
 
   // -- Theme
 
@@ -304,8 +324,10 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
   }, []);
 
   const clearAllData = useCallback(() => {
-    localStorage.removeItem(storageKey);
-    localStorage.removeItem(`${STORAGE_KEY}:${storageScope === 'global' ? 'user' : 'global'}`);
+    const scope = storageScopeRef.current;
+    const key = storageKeyRef.current;
+    localStorage.removeItem(key);
+    localStorage.removeItem(`${STORAGE_KEY}:${scope === 'global' ? 'user' : 'global'}`);
     localStorage.removeItem(THEME_KEY);
     localStorage.removeItem('cyber-ai-welcome-seen');
     const fresh = createSession();
@@ -319,14 +341,16 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     setSidebarOpen(false);
     setTheme('dark');
     document.documentElement.setAttribute('data-theme', 'dark');
-  }, [storageKey, storageScope]);
+  }, []);
 
   // -- Search
 
   const toggleSearch = useCallback(() => {
-    setSearchOpen(o => !o);
-    if (searchOpen) setSearchQuery('');
-  }, [searchOpen]);
+    setSearchOpen(o => {
+      if (o) setSearchQuery('');
+      return !o;
+    });
+  }, []);
 
   // -- Sidebar
 
@@ -337,10 +361,12 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
   // -- Export
 
   const exportMarkdown = useCallback(() => {
-    if (messages.length === 0) return;
-    const session = activeSession;
+    const msgs = messagesRef.current;
+    if (msgs.length === 0) return;
+    const session = activeSessionRef.current;
+    if (!session) return;
     const lines: string[] = [`# ${session.name}`, `*Exported from Cyber AI \u2014 ${new Date().toLocaleString()}*`, ''];
-    for (const m of messages) {
+    for (const m of msgs) {
       const label = m.role === 'user' ? '**You**' : '**Cyber AI**';
       const time = new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       lines.push(`${label} \u2014 ${time}`, '', m.content, '', '---', '');
@@ -353,7 +379,7 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     a.download = `cyber-ai-${session.name.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.md`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [messages, activeSession]);
+  }, []);
 
   return {
     // Session state
@@ -369,7 +395,7 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     searchQuery,
     searchOpen,
     sidebarOpen,
-    // Session actions
+    // Session actions (stable callback references across token streaming renders)
     newSession,
     switchSession,
     renameSession,
