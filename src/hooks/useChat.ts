@@ -72,22 +72,19 @@ function computeMaxId(sessions: Session[]): number {
 export function useChat(storageScope = 'global', sessionToken?: string) {
   const storageKey = `${STORAGE_KEY}:${storageScope}`;
 
-  // Compute initial sessions + activeSessionId together so they always agree.
-  // Using a ref ensures the computation runs exactly once even in Strict Mode.
-  const initRef = useRef<{ sessions: Session[]; activeSessionId: string } | null>(null);
-  if (initRef.current === null) {
+  // Lazily compute initial sessions + activeSessionId using useState initializer to avoid ref access during render
+  const [initialData] = useState(() => {
     const stored = loadSessions(storageKey);
     if (stored.length > 0) {
-      initRef.current = { sessions: stored, activeSessionId: stored[0].id };
-    } else {
-      const fresh = createSession();
-      initRef.current = { sessions: [fresh], activeSessionId: fresh.id };
+      return { sessions: stored, activeSessionId: stored[0].id };
     }
-  }
+    const fresh = createSession();
+    return { sessions: [fresh], activeSessionId: fresh.id };
+  });
 
   // -- State
-  const [sessions, setSessions] = useState<Session[]>(initRef.current.sessions);
-  const [activeSessionId, setActiveSessionId] = useState<string>(initRef.current.activeSessionId);
+  const [sessions, setSessions] = useState<Session[]>(initialData.sessions);
+  const [activeSessionId, setActiveSessionId] = useState<string>(initialData.activeSessionId);
   const [loading, setLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState<ChatError | null>(null);
@@ -98,8 +95,8 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
 
   // -- Refs
   const abortRef = useRef<AbortController | null>(null);
-  // Seed nextId from the initial sessions data so IDs never collide with persisted ones
-  const nextId = useRef(computeMaxId(initRef.current.sessions) + 1);
+  // Seed nextId from initial sessions data so IDs never collide with persisted ones
+  const nextId = useRef(computeMaxId(initialData.sessions) + 1);
   // Stable ref to latest messages so callbacks don't need `messages` in their dep arrays
   const messagesRef = useRef<Message[]>([]);
 
@@ -120,7 +117,11 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     [sessions, activeSessionId],
   );
   const messages = useMemo(() => activeSession?.messages ?? [], [activeSession]);
-  messagesRef.current = messages;
+
+  // Keep messagesRef updated in effect to avoid ref assignment during render
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   // -- Session actions
 
@@ -275,7 +276,7 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
       setLoading(false);
       setStreamingContent('');
     }
-  }, [loading, activeSessionId]);
+  }, [loading, activeSessionId, storageScope, sessionToken]);
 
   const stopGenerating = useCallback(() => {
     abortRef.current?.abort();

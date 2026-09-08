@@ -72,6 +72,7 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   const [loadingAudit, setLoadingAudit] = useState(false);
   const [auditError, setAuditError] = useState<string | null>(null);
   const [auditPage, setAuditPage] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const showToast = useCallback((type: 'success' | 'error', message: string) => {
     const id = crypto.randomUUID();
@@ -81,102 +82,123 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
     }, 4000);
   }, []);
 
-  const loadUsers = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/admin/users', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null) as { error?: string } | null;
-        throw new Error(payload?.error ?? `Failed to load users (${response.status}).`);
-      }
-
-      const payload = await response.json() as { users: AdminUser[] };
-      setUsers(payload.users);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to load users.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Load users via async effect without calling setState synchronously in the effect body
   useEffect(() => {
-    void loadUsers();
-  }, [session.access_token]);
+    let ignore = false;
+    async function fetchUsers() {
+      try {
+        const response = await fetch('/api/admin/users', {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
 
-  const loadQueries = useCallback(async () => {
-    setLoadingQueries(true);
-    setQueryError(null);
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null) as { error?: string } | null;
+          throw new Error(payload?.error ?? `Failed to load users (${response.status}).`);
+        }
 
-    try {
-      const params = new URLSearchParams({
-        page: String(queryPage),
-        perPage: String(QUERY_PAGE_SIZE),
-      });
-      if (querySearch.trim()) params.set('q', querySearch.trim());
-      if (querySource !== 'all') params.set('source', querySource);
-
-      const response = await fetch(`/api/admin/queries?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null) as { error?: string } | null;
-        throw new Error(payload?.error ?? `Failed to load queries (${response.status}).`);
+        const payload = await response.json() as { users: AdminUser[] };
+        if (!ignore) {
+          setUsers(payload.users);
+          setError(null);
+        }
+      } catch (err) {
+        if (!ignore) {
+          setError(err instanceof Error ? err.message : 'Unable to load users.');
+        }
+      } finally {
+        if (!ignore) {
+          setLoading(false);
+        }
       }
-
-      const payload = await response.json() as { queries: AdminQuery[] };
-      setQueries(payload.queries);
-    } catch (err) {
-      setQueryError(err instanceof Error ? err.message : 'Unable to load queries.');
-    } finally {
-      setLoadingQueries(false);
     }
-  }, [session.access_token, queryPage, querySearch, querySource]);
 
+    void fetchUsers();
+    return () => { ignore = true; };
+  }, [session.access_token, refreshKey]);
+
+  // Load queries via async effect without calling setState synchronously in the effect body
   useEffect(() => {
-    if (tab === 'queries') {
-      void loadQueries();
-    }
-  }, [tab, loadQueries]);
+    if (tab !== 'queries') return;
+    let ignore = false;
 
-  const loadAuditLogs = useCallback(async () => {
-    setLoadingAudit(true);
-    setAuditError(null);
+    async function fetchQueries() {
+      try {
+        const params = new URLSearchParams({
+          page: String(queryPage),
+          perPage: String(QUERY_PAGE_SIZE),
+        });
+        if (querySearch.trim()) params.set('q', querySearch.trim());
+        if (querySource !== 'all') params.set('source', querySource);
 
-    try {
-      const params = new URLSearchParams({
-        page: String(auditPage),
-        perPage: String(AUDIT_PAGE_SIZE),
-      });
+        const response = await fetch(`/api/admin/queries?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
 
-      const response = await fetch(`/api/admin/audit?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null) as { error?: string } | null;
+          throw new Error(payload?.error ?? `Failed to load queries (${response.status}).`);
+        }
 
-      if (!response.ok) {
-        const payload = await response.json().catch(() => null) as { error?: string } | null;
-        throw new Error(payload?.error ?? `Failed to load audit log (${response.status}).`);
+        const payload = await response.json() as { queries: AdminQuery[] };
+        if (!ignore) {
+          setQueries(payload.queries);
+          setQueryError(null);
+        }
+      } catch (err) {
+        if (!ignore) {
+          setQueryError(err instanceof Error ? err.message : 'Unable to load queries.');
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingQueries(false);
+        }
       }
-
-      const payload = await response.json() as { logs: AdminAuditLog[] };
-      setAuditLogs(payload.logs);
-    } catch (err) {
-      setAuditError(err instanceof Error ? err.message : 'Unable to load audit log.');
-    } finally {
-      setLoadingAudit(false);
     }
-  }, [session.access_token, auditPage]);
 
+    void fetchQueries();
+    return () => { ignore = true; };
+  }, [session.access_token, tab, queryPage, querySearch, querySource, refreshKey]);
+
+  // Load audit logs via async effect without calling setState synchronously in the effect body
   useEffect(() => {
-    if (tab === 'audit') {
-      void loadAuditLogs();
+    if (tab !== 'audit') return;
+    let ignore = false;
+
+    async function fetchAuditLogs() {
+      try {
+        const params = new URLSearchParams({
+          page: String(auditPage),
+          perPage: String(AUDIT_PAGE_SIZE),
+        });
+
+        const response = await fetch(`/api/admin/audit?${params.toString()}`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null) as { error?: string } | null;
+          throw new Error(payload?.error ?? `Failed to load audit log (${response.status}).`);
+        }
+
+        const payload = await response.json() as { logs: AdminAuditLog[] };
+        if (!ignore) {
+          setAuditLogs(payload.logs);
+          setAuditError(null);
+        }
+      } catch (err) {
+        if (!ignore) {
+          setAuditError(err instanceof Error ? err.message : 'Unable to load audit log.');
+        }
+      } finally {
+        if (!ignore) {
+          setLoadingAudit(false);
+        }
+      }
     }
-  }, [tab, loadAuditLogs]);
+
+    void fetchAuditLogs();
+    return () => { ignore = true; };
+  }, [session.access_token, tab, auditPage, refreshKey]);
 
   const filteredUsers = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -198,14 +220,6 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
     return filteredUsers.slice(start, end);
   }, [filteredUsers, currentPage]);
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [query]);
-
-  useEffect(() => {
-    setQueryPage(1);
-  }, [querySearch, querySource]);
-
   const updateRole = async (userId: string, role: 'user' | 'admin') => {
     setSavingId(userId);
     setError(null);
@@ -225,7 +239,8 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
         throw new Error(payload?.error ?? `Failed to update user (${response.status}).`);
       }
 
-      await loadUsers();
+      setLoading(true);
+      setRefreshKey(k => k + 1);
       showToast('success', `User role updated to ${role} successfully.`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unable to update user.';
@@ -257,7 +272,8 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
         throw new Error(payload?.error ?? `Failed to delete user (${response.status}).`);
       }
 
-      await loadUsers();
+      setLoading(true);
+      setRefreshKey(k => k + 1);
       showToast('success', 'User deleted successfully.');
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unable to delete user.';
@@ -336,14 +352,20 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
                   <input
                     type="search"
                     value={query}
-                    onChange={(event) => setQuery(event.target.value)}
+                    onChange={(event) => {
+                      setQuery(event.target.value);
+                      setCurrentPage(1);
+                    }}
                     placeholder="Email, name, role"
                   />
                 </label>
 
                 <button
                   className="adm-btn adm-btn--primary"
-                  onClick={() => void loadUsers()}
+                  onClick={() => {
+                    setLoading(true);
+                    setRefreshKey(k => k + 1);
+                  }}
                   disabled={loading}
                 >
                   {loading ? 'Refreshing...' : 'Refresh'}
@@ -477,7 +499,10 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
                   <input
                     type="search"
                     value={querySearch}
-                    onChange={(event) => setQuerySearch(event.target.value)}
+                    onChange={(event) => {
+                      setQuerySearch(event.target.value);
+                      setQueryPage(1);
+                    }}
                     placeholder="Search queries"
                   />
                 </label>
@@ -486,7 +511,10 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
                   <span className="adm-search-label">Source</span>
                   <select
                     value={querySource}
-                    onChange={(event) => setQuerySource(event.target.value as 'all' | 'primary' | 'brave')}
+                    onChange={(event) => {
+                      setQuerySource(event.target.value as 'all' | 'primary' | 'brave');
+                      setQueryPage(1);
+                    }}
                   >
                     <option value="all">All</option>
                     <option value="primary">Primary API</option>
@@ -496,7 +524,10 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
 
                 <button
                   className="adm-btn adm-btn--primary"
-                  onClick={() => void loadQueries()}
+                  onClick={() => {
+                    setLoadingQueries(true);
+                    setRefreshKey(k => k + 1);
+                  }}
                   disabled={loadingQueries}
                 >
                   {loadingQueries ? 'Refreshing...' : 'Refresh'}
@@ -589,7 +620,10 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
               <div className="adm-toolbar">
                 <button
                   className="adm-btn adm-btn--primary"
-                  onClick={() => void loadAuditLogs()}
+                  onClick={() => {
+                    setLoadingAudit(true);
+                    setRefreshKey(k => k + 1);
+                  }}
                   disabled={loadingAudit}
                 >
                   {loadingAudit ? 'Refreshing...' : 'Refresh'}

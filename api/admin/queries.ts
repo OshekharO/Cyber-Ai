@@ -1,6 +1,19 @@
 const supabaseUrl = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 
+interface ApiRequest {
+  headers: Record<string, string | undefined>;
+  method?: string;
+  query?: Record<string, string | string[] | undefined>;
+  body?: unknown;
+}
+
+interface ApiResponse {
+  status: (code: number) => ApiResponse;
+  json: (payload: unknown) => void;
+  setHeader: (name: string, value: string) => void;
+}
+
 function buildUrl(path: string, query?: Record<string, string | number | undefined>) {
   const url = new URL(`${supabaseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`);
   if (query) {
@@ -13,7 +26,7 @@ function buildUrl(path: string, query?: Record<string, string | number | undefin
   return url;
 }
 
-function json(res: any, status: number, payload: unknown) {
+function json(res: ApiResponse, status: number, payload: unknown) {
   res.status(status).json(payload);
 }
 
@@ -74,7 +87,7 @@ interface UserQueryRow {
   profiles: { email: string | null; full_name: string | null } | null;
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   try {
     await requireAdmin(req.headers.authorization);
 

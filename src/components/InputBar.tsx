@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect, useState, type KeyboardEvent } from 'react';
+import { useRef, useCallback, useEffect, useState, memo, type KeyboardEvent } from 'react';
 import { CommandPalette } from './CommandPalette.tsx';
 
 const PASTE_THRESHOLD = 1_000; // chars
@@ -12,7 +12,8 @@ interface InputBarProps {
   onClear: () => void;
 }
 
-export function InputBar({ input, loading, onChange, onSend, onStop, onClear }: InputBarProps) {
+// Wrapped in React.memo to prevent unnecessary re-renders when parent streams AI response tokens
+export const InputBar = memo(function InputBar({ input, loading, onChange, onSend, onStop, onClear }: InputBarProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [pasteConfirm, setPasteConfirm] = useState<{ text: string } | null>(null);
 
@@ -154,4 +155,4 @@ export function InputBar({ input, loading, onChange, onSend, onStop, onClear }: 
       </div>
     </div>
   );
-}
+});

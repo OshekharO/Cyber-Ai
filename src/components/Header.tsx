@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { FiMenu, FiShield, FiSearch, FiDownload, FiTrash2 } from 'react-icons/fi';
 
 interface HeaderProps {
@@ -11,7 +12,8 @@ interface HeaderProps {
   onClear: () => void;
 }
 
-export function Header({
+// Wrapped with React.memo to prevent unnecessary Header re-renders on high-frequency streaming token updates.
+export const Header = memo(function Header({
   searchOpen,
   loading,
   hasMessages,
@@ -81,4 +83,4 @@ export function Header({
       </div>
     </header>
   );
-}
+});
