@@ -58,31 +58,40 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
     return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
   }, [chat]);
 
-  const lastUserMessage = useMemo(() => [...chat.messages].reverse().find(m => m.role === 'user'), [chat.messages]);
+  const { sendMessage, setSidebarOpen, setError, clearAllData } = chat;
 
-  // Memoize handlers to maintain reference equality and prevent unnecessary re-renders of memoized components (Header, Sidebar, InputBar) during AI streaming token updates.
+  // Optimize lastUserMessage lookup to iterate backward without allocating and reversing a array copy
+  const lastUserMessage = useMemo(() => {
+    for (let i = chat.messages.length - 1; i >= 0; i--) {
+      if (chat.messages[i].role === 'user') return chat.messages[i];
+    }
+    return undefined;
+  }, [chat.messages]);
+
+  // Memoize handlers with stable destructured action references to maintain reference equality
+  // and prevent unnecessary re-renders of memoized components (Header, Sidebar, InputBar) during AI streaming token updates.
   const handleSend = useCallback((text: string) => {
-    chat.sendMessage(text);
-  }, [chat]);
+    sendMessage(text);
+  }, [sendMessage]);
 
   const handleRetry = useCallback(() => {
     if (lastUserMessage) {
-      chat.sendMessage(lastUserMessage.content);
+      sendMessage(lastUserMessage.content);
     }
-  }, [lastUserMessage, chat]);
+  }, [lastUserMessage, sendMessage]);
 
   const handleCloseSidebar = useCallback(() => {
-    chat.setSidebarOpen(false);
-  }, [chat]);
+    setSidebarOpen(false);
+  }, [setSidebarOpen]);
 
   const handleDismissError = useCallback(() => {
-    chat.setError(null);
-  }, [chat]);
+    setError(null);
+  }, [setError]);
 
   const handleDeleteAccount = useCallback(() => {
-    chat.clearAllData();
+    clearAllData();
     onSignOut();
-  }, [chat, onSignOut]);
+  }, [clearAllData, onSignOut]);
 
   const searchMatchCount = useMemo(
     () => chat.searchQuery.trim()
