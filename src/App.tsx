@@ -15,18 +15,14 @@ type View = 'landing' | 'chat' | 'admin' | 'auth';
 export default function App() {
   const auth = useAuth();
   const [view, setView] = useState<View>(() => window.location.hash === '#admin' ? 'admin' : (window.location.hash === '#auth' ? 'auth' : 'landing'));
-  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [dismissedWelcome, setDismissedWelcome] = useState(false);
 
-  useEffect(() => {
-    const hasSeen = localStorage.getItem(WELCOME_SEEN_KEY);
-    if (!hasSeen && auth.session) {
-      setShowWelcomeModal(true);
-    }
-  }, [auth.session]);
+  const hasSeenWelcome = Boolean(localStorage.getItem(WELCOME_SEEN_KEY));
+  const showWelcomeModal = !dismissedWelcome && !hasSeenWelcome && Boolean(auth.session);
 
   const dismissWelcomeModal = () => {
     localStorage.setItem(WELCOME_SEEN_KEY, 'true');
-    setShowWelcomeModal(false);
+    setDismissedWelcome(true);
   };
 
   useEffect(() => {
@@ -35,12 +31,8 @@ export default function App() {
     return () => window.removeEventListener('hashchange', syncView);
   }, []);
 
-  useEffect(() => {
-    if (!auth.isAdmin && view === 'admin') {
-      window.history.replaceState(null, '', window.location.pathname + window.location.search);
-      setView('landing');
-    }
-  }, [auth.isAdmin, view]);
+  // Compute effective view based on auth status without synchronous state updates in effects
+  const activeView = (!auth.isAdmin && view === 'admin') ? 'landing' : view;
 
   const openAdmin = () => {
     window.location.hash = 'admin';
@@ -103,7 +95,7 @@ export default function App() {
     return (
       <>
         {welcomeModal}
-        {view === 'auth' ? (
+        {activeView === 'auth' ? (
           <AuthScreen
             loading={auth.loading}
             error={auth.error}
@@ -119,7 +111,7 @@ export default function App() {
     );
   }
 
-  if (view === 'admin' && auth.isAdmin && auth.profile) {
+  if (activeView === 'admin' && auth.isAdmin && auth.profile) {
     return (
       <>
         {welcomeModal}

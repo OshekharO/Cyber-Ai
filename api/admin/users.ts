@@ -1,6 +1,28 @@
 const supabaseUrl = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL ?? '';
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
 
+interface ApiRequest {
+  headers: Record<string, string | undefined>;
+  method?: string;
+  query?: Record<string, string | string[] | undefined>;
+  body?: unknown;
+}
+
+interface ApiResponse {
+  status: (code: number) => ApiResponse;
+  json: (payload: unknown) => void;
+  setHeader: (name: string, value: string) => void;
+}
+
+interface AuthUserItem {
+  id: string;
+  email?: string | null;
+  created_at?: string;
+  last_sign_in_at?: string | null;
+  confirmed_at?: string | null;
+  user_metadata?: { full_name?: string; name?: string };
+}
+
 function buildUrl(path: string, query?: Record<string, string | number | undefined>) {
   const url = new URL(`${supabaseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`);
   if (query) {
@@ -13,7 +35,7 @@ function buildUrl(path: string, query?: Record<string, string | number | undefin
   return url;
 }
 
-function json(res: any, status: number, payload: unknown) {
+function json(res: ApiResponse, status: number, payload: unknown) {
   res.status(status).json(payload);
 }
 
@@ -75,12 +97,12 @@ async function logAudit(adminId: string, action: string, targetUserId: string, d
   }, supabaseServiceRoleKey);
 }
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   try {
     const { user } = await requireAdmin(req.headers.authorization);
-    const body = typeof req.body === 'string'
+    const body = (typeof req.body === 'string'
       ? JSON.parse(req.body)
-      : req.body ?? {};
+      : req.body ?? {}) as Record<string, unknown>;
 
     if (req.method === 'GET') {
       const page = Math.max(Number(req.query?.page ?? 1) || 1, 1);
@@ -91,9 +113,9 @@ export default async function handler(req: any, res: any) {
         throw new Error(`Failed to load users (${listResponse.status}).`);
       }
 
-      const listPayload = await listResponse.json() as { users?: Array<any> };
+      const listPayload = await listResponse.json() as { users?: AuthUserItem[] };
       const users = (listPayload.users ?? []).slice((page - 1) * perPage, page * perPage);
-      const ids = users.map((user) => user.id);
+      const ids = users.map((userItem) => userItem.id);
 
       if (ids.length === 0) {
         json(res, 200, { users: [] });
@@ -114,16 +136,16 @@ export default async function handler(req: any, res: any) {
       const profileMap = new Map(profiles.map((profile) => [profile.id, profile]));
 
       json(res, 200, {
-        users: users.map((user: any) => {
-          const profile = profileMap.get(user.id);
+        users: users.map((userItem: AuthUserItem) => {
+          const profile = profileMap.get(userItem.id);
           return {
-            id: user.id,
-            email: user.email ?? profile?.email ?? null,
-            full_name: profile?.full_name ?? user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
+            id: userItem.id,
+            email: userItem.email ?? profile?.email ?? null,
+            full_name: profile?.full_name ?? userItem.user_metadata?.full_name ?? userItem.user_metadata?.name ?? null,
             role: profile?.role ?? 'user',
-            created_at: profile?.created_at ?? user.created_at,
-            last_sign_in_at: user.last_sign_in_at ?? null,
-            confirmed_at: user.confirmed_at ?? null,
+            created_at: profile?.created_at ?? userItem.created_at,
+            last_sign_in_at: userItem.last_sign_in_at ?? null,
+            confirmed_at: userItem.confirmed_at ?? null,
           };
         }),
       });

@@ -191,7 +191,7 @@ function toSession(payload: Partial<SupabaseSession>): SupabaseSession | null {
 export function useAuth() {
   const [session, setSession] = useState<SupabaseSession | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
   const [error, setError] = useState<string | null>(isSupabaseConfigured ? null : supabaseConfigError);
 
   const commitSession = useCallback((nextSession: SupabaseSession | null) => {
@@ -209,8 +209,6 @@ export function useAuth() {
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
-      setLoading(false);
-      setError(supabaseConfigError);
       return;
     }
 

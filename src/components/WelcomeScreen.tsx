@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ElementType } from 'react';
 import {
   FiAlertTriangle,
   FiUnlock,
@@ -31,22 +31,14 @@ interface SuggestionCategory {
   items: SuggestionItem[];
 }
 
-interface CategoryIconMap {
-  [key: string]: any;
-}
-
-interface ItemIconMap {
-  [key: string]: any;
-}
-
-const CATEGORY_ICONS: CategoryIconMap = {
+const CATEGORY_ICONS: Record<string, ElementType> = {
   'Threats': FiAlertTriangle,
   'Tools': FiTool,
   'CTF': FiFlag,
   'Compliance': FiList
 };
 
-const ITEM_ICONS: ItemIconMap = {
+const ITEM_ICONS: Record<string, ElementType> = {
   'Explain ransomware attack stages': FiUnlock,
   'What is a zero-day exploit?': FiTarget,
   'How do APT groups operate?': FiUser,

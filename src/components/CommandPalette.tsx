@@ -1,3 +1,4 @@
+import type { ElementType } from 'react';
 import { FiTrash2, FiBook, FiSearch, FiMap } from 'react-icons/fi';
 
 interface Command {
@@ -8,7 +9,7 @@ interface Command {
   icon: string;
 }
 
-const COMMAND_ICONS: Record<string, any> = {
+const COMMAND_ICONS: Record<string, ElementType> = {
   '/clear': FiTrash2,
   '/explain': FiBook,
   '/cve': FiSearch,
@@ -56,7 +57,7 @@ export function CommandPalette({ input, onSelect, onExecute }: CommandPalettePro
           }}
         >
           {(() => {
-            const IconComponent = COMMAND_ICONS[cmd.trigger as keyof typeof COMMAND_ICONS];
+            const IconComponent = COMMAND_ICONS[cmd.trigger];
             return IconComponent ? <IconComponent className="command-icon" aria-hidden="true" size={18} /> : null;
           })()}
           <div className="command-info">

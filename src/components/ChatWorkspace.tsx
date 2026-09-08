@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useCallback } from 'react';
 import { Header } from './Header.tsx';
 import { Sidebar } from './Sidebar.tsx';
 import { WelcomeScreen } from './WelcomeScreen.tsx';
@@ -56,19 +56,33 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
 
     window.addEventListener('keydown', handleKeyboardShortcuts);
     return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
-  }, [chat.searchOpen, chat.messages.length, chat.toggleSearch, chat.newSession, chat.toggleTheme]);
+  }, [chat]);
 
   const lastUserMessage = useMemo(() => [...chat.messages].reverse().find(m => m.role === 'user'), [chat.messages]);
 
-  const handleSend = (text: string) => {
+  // Memoize handlers to maintain reference equality and prevent unnecessary re-renders of memoized components (Header, Sidebar, InputBar) during AI streaming token updates.
+  const handleSend = useCallback((text: string) => {
     chat.sendMessage(text);
-  };
+  }, [chat]);
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     if (lastUserMessage) {
       chat.sendMessage(lastUserMessage.content);
     }
-  };
+  }, [lastUserMessage, chat]);
+
+  const handleCloseSidebar = useCallback(() => {
+    chat.setSidebarOpen(false);
+  }, [chat]);
+
+  const handleDismissError = useCallback(() => {
+    chat.setError(null);
+  }, [chat]);
+
+  const handleDeleteAccount = useCallback(() => {
+    chat.clearAllData();
+    onSignOut();
+  }, [chat, onSignOut]);
 
   const searchMatchCount = useMemo(
     () => chat.searchQuery.trim()
@@ -107,7 +121,7 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
           onNew={chat.newSession}
           onSwitch={chat.switchSession}
           onDelete={chat.deleteSession}
-          onClose={() => chat.setSidebarOpen(false)}
+          onClose={handleCloseSidebar}
           userLabel={userLabel}
           isAdmin={isAdmin}
           onOpenAdmin={onOpenAdmin}
@@ -115,7 +129,7 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
           theme={chat.theme}
           onToggleTheme={chat.toggleTheme}
           onClearLocalStorage={chat.clearAllData}
-          onDeleteAccount={() => { chat.clearAllData(); onSignOut(); }}
+          onDeleteAccount={handleDeleteAccount}
           onRename={chat.renameSession}
         />
 
@@ -133,7 +147,7 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
               onFeedback={chat.setFeedback}
               onRegenerate={chat.regenerate}
               onRetry={handleRetry}
-              onDismissError={() => chat.setError(null)}
+              onDismissError={handleDismissError}
             />
           )}
 
