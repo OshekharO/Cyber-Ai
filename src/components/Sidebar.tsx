@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings, FiSun, FiMoon, FiDatabase, FiEdit2 } from 'react-icons/fi';
 import type { Session } from '../hooks/useChat.ts';
 
@@ -21,7 +21,8 @@ interface SidebarProps {
   onRename?: (id: string, name: string) => void;
 }
 
-export function Sidebar({ 
+// Wrap with memo so Sidebar only re-renders when props change, preventing unnecessary updates during streaming response updates.
+export const Sidebar = memo(function Sidebar({
   sessions, 
   activeSessionId, 
   open, 
@@ -260,4 +261,4 @@ export function Sidebar({
       )}
     </>
   );
-}
+});
