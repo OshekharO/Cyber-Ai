@@ -1,4 +1,4 @@
-import { useState, type ElementType } from 'react';
+import { useState, memo, type ElementType } from 'react';
 import {
   FiAlertTriangle,
   FiUnlock,
@@ -104,7 +104,8 @@ interface WelcomeScreenProps {
   onSend: (text: string) => void;
 }
 
-export function WelcomeScreen({ onSend }: WelcomeScreenProps) {
+// Wrapped with React.memo to prevent unnecessary re-renders when parent state updates occur while the welcome screen is displayed.
+export const WelcomeScreen = memo(function WelcomeScreen({ onSend }: WelcomeScreenProps) {
   const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0].label);
 
   const active = CATEGORIES.find(c => c.label === activeCategory) ?? CATEGORIES[0];
@@ -164,4 +165,4 @@ export function WelcomeScreen({ onSend }: WelcomeScreenProps) {
       </div>
     </div>
   );
-}
+});
