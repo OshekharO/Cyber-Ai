@@ -65,8 +65,9 @@ export function MessageList({
   }, []);
 
   // Filter messages by search query safely and efficiently.
-  // Lowercase normalized query is computed once per search input update.
+  // Fast path: return array reference directly when search is empty to avoid string operations and array filtering.
   const visibleMessages = useMemo<Message[]>(() => {
+    if (!searchQuery) return messages;
     const query = searchQuery.trim().toLowerCase();
     if (!query) return messages;
     return messages.filter(m => m.content.toLowerCase().includes(query));
