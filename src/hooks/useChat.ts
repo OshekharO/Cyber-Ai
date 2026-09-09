@@ -153,8 +153,21 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     setSidebarOpen(false);
   }, []);
 
+  // Optimized: Only update session if name actually changed, preventing unneeded sessions re-render
   const renameSession = useCallback((id: string, name: string) => {
-    setSessions(prev => prev.map(s => s.id === id ? { ...s, name: name.trim() || 'New Chat' } : s));
+    const newName = name.trim() || 'New Chat';
+    setSessions(prev => {
+      let changed = false;
+      const next = prev.map(s => {
+        if (s.id === id) {
+          if (s.name === newName) return s;
+          changed = true;
+          return { ...s, name: newName };
+        }
+        return s;
+      });
+      return changed ? next : prev;
+    });
   }, []);
 
   const deleteSession = useCallback((id: string) => {
@@ -175,21 +188,42 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     });
   }, []);
 
+  // Optimized: Only create new session object for active session, preserving reference equality for inactive sessions
   const clearMessages = useCallback(() => {
-    setSessions(prev => prev.map(s =>
-      s.id === activeSessionIdRef.current ? { ...s, messages: [], updatedAt: new Date().toISOString() } : s
-    ));
+    const currentId = activeSessionIdRef.current;
+    setSessions(prev => {
+      let changed = false;
+      const next = prev.map(s => {
+        if (s.id === currentId) {
+          if (s.messages.length === 0) return s;
+          changed = true;
+          return { ...s, messages: [], updatedAt: new Date().toISOString() };
+        }
+        return s;
+      });
+      return changed ? next : prev;
+    });
     setError(null);
   }, []);
 
   // -- Message actions
 
+  // Optimized: Return previous state reference if messages were not changed to prevent cascading child re-renders
   const updateMessages = useCallback((updater: (msgs: Message[]) => Message[]) => {
-    setSessions(prev => prev.map(s =>
-      s.id === activeSessionIdRef.current
-        ? { ...s, messages: updater(s.messages), updatedAt: new Date().toISOString() }
-        : s
-    ));
+    const currentId = activeSessionIdRef.current;
+    setSessions(prev => {
+      let changed = false;
+      const next = prev.map(s => {
+        if (s.id === currentId) {
+          const updatedMsgs = updater(s.messages);
+          if (updatedMsgs === s.messages) return s;
+          changed = true;
+          return { ...s, messages: updatedMsgs, updatedAt: new Date().toISOString() };
+        }
+        return s;
+      });
+      return changed ? next : prev;
+    });
   }, []);
 
   const setFeedback = useCallback((msgId: number, fb: 'up' | 'down') => {
