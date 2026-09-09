@@ -64,6 +64,15 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
   const [queries, setQueries] = useState<AdminQuery[]>([]);
   const [loadingQueries, setLoadingQueries] = useState(false);
   const [querySearch, setQuerySearch] = useState('');
+  const [debouncedQuerySearch, setDebouncedQuerySearch] = useState('');
+
+  // Debounce query search input by 300ms to reduce unnecessary API fetch requests on fast typing
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuerySearch(querySearch);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [querySearch]);
   const [querySource, setQuerySource] = useState<'all' | 'primary' | 'brave'>('all');
   const [queryError, setQueryError] = useState<string | null>(null);
   const [queryPage, setQueryPage] = useState(1);
@@ -127,7 +136,7 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
           page: String(queryPage),
           perPage: String(QUERY_PAGE_SIZE),
         });
-        if (querySearch.trim()) params.set('q', querySearch.trim());
+        if (debouncedQuerySearch.trim()) params.set('q', debouncedQuerySearch.trim());
         if (querySource !== 'all') params.set('source', querySource);
 
         const response = await fetch(`/api/admin/queries?${params.toString()}`, {
@@ -157,7 +166,7 @@ export function AdminDashboard({ session, profile, onBackToChat, onSignOut, noti
 
     void fetchQueries();
     return () => { ignore = true; };
-  }, [session.access_token, tab, queryPage, querySearch, querySource, refreshKey]);
+  }, [session.access_token, tab, queryPage, debouncedQuerySearch, querySource, refreshKey]);
 
   // Load audit logs via async effect without calling setState synchronously in the effect body
   useEffect(() => {
