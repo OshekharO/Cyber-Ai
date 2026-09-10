@@ -1,0 +1,3 @@
+## 2025-03-10 - Scroll Event Handler Throttling and Loop String Allocation
+**Learning:** Attaching unthrottled scroll handlers directly to chat container DOM elements causes layout/reflow reads on every pixel scroll tick (~60-120+ Hz), leading to main-thread jank during rapid scrolling. Additionally, performing string processing like `.toLowerCase()` inside callback loops (e.g., `.filter(m => m.content.includes(query.toLowerCase()))`) creates unnecessary string allocations on every item iteration.
+**Action:** Always throttle scroll/resize handlers using `requestAnimationFrame` with proper unmount cleanup, and hoist invariant string transformations (like lowercasing query strings) outside loop callbacks.

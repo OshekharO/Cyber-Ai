@@ -93,12 +93,11 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
     onSignOut();
   }, [clearAllData, onSignOut]);
 
-  const searchMatchCount = useMemo(
-    () => chat.searchQuery.trim()
-      ? chat.messages.filter(m => m.content.toLowerCase().includes(chat.searchQuery.toLowerCase())).length
-      : 0,
-    [chat.messages, chat.searchQuery],
-  );
+  const searchMatchCount = useMemo(() => {
+    const query = chat.searchQuery.trim().toLowerCase();
+    if (!query) return 0;
+    return chat.messages.filter(m => m.content.toLowerCase().includes(query)).length;
+  }, [chat.messages, chat.searchQuery]);
 
   return (
     <div className={`app${chat.sidebarOpen ? ' app--sidebar-open' : ''}`}>
