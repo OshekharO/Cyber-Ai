@@ -1,4 +1,4 @@
-import type { ElementType } from 'react';
+import { memo, type ElementType } from 'react';
 import { FiTrash2, FiBook, FiSearch, FiMap } from 'react-icons/fi';
 
 interface Command {
@@ -29,7 +29,8 @@ interface CommandPaletteProps {
   onExecute: (command: string) => void;
 }
 
-export function CommandPalette({ input, onSelect, onExecute }: CommandPaletteProps) {
+// Wrapped with React.memo to prevent unnecessary re-renders when parent input state updates or during AI streaming updates
+export const CommandPalette = memo(function CommandPalette({ input, onSelect, onExecute }: CommandPaletteProps) {
   if (!input.startsWith('/')) return null;
 
   const query = input.slice(1).toLowerCase();
@@ -42,30 +43,30 @@ export function CommandPalette({ input, onSelect, onExecute }: CommandPalettePro
   return (
     <div className="command-palette" role="listbox" aria-label="Available commands">
       <div className="command-palette-header">Commands</div>
-      {filtered.map(cmd => (
-        <button
-          key={cmd.trigger}
-          className="command-item"
-          role="option"
-          aria-selected={false}
-          onClick={() => {
-            if (cmd.trigger === '/clear') {
-              onExecute('/clear');
-            } else {
-              onSelect(cmd.template);
-            }
-          }}
-        >
-          {(() => {
-            const IconComponent = COMMAND_ICONS[cmd.trigger];
-            return IconComponent ? <IconComponent className="command-icon" aria-hidden="true" size={18} /> : null;
-          })()}
-          <div className="command-info">
-            <span className="command-label">{cmd.label}</span>
-            <span className="command-desc">{cmd.description}</span>
-          </div>
-        </button>
-      ))}
+      {filtered.map(cmd => {
+        const IconComponent = COMMAND_ICONS[cmd.trigger];
+        return (
+          <button
+            key={cmd.trigger}
+            className="command-item"
+            role="option"
+            aria-selected={false}
+            onClick={() => {
+              if (cmd.trigger === '/clear') {
+                onExecute('/clear');
+              } else {
+                onSelect(cmd.template);
+              }
+            }}
+          >
+            {IconComponent && <IconComponent className="command-icon" aria-hidden="true" size={18} />}
+            <div className="command-info">
+              <span className="command-label">{cmd.label}</span>
+              <span className="command-desc">{cmd.description}</span>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
-}
+});
