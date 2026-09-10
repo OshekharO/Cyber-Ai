@@ -6,4 +6,4 @@ Allow: /
 Disallow: /api/
 
 # Sitemap location
-Sitemap: https://cyber-ai.vercel.app/sitemap.xml
+Sitemap: https://cybermind.bond/sitemap.xml
