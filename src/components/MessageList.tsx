@@ -32,6 +32,7 @@ export function MessageList({
 }: MessageListProps) {
   const endRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const rafIdRef = useRef<number | null>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
 
@@ -47,13 +48,28 @@ export function MessageList({
     }
   }, [streamingContent]);
 
+  // Clean up any pending animation frame request on unmount to prevent memory leaks or state updates after unmount.
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current);
+      }
+    };
+  }, []);
+
+  // Throttle scroll checks with requestAnimationFrame to prevent layout thrashing
+  // and redundant main-thread processing on every scroll pixel tick (~60-120+ Hz).
   const handleScroll = useCallback(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const fromTop = el.scrollTop;
-    const fromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    setShowScrollTop(fromTop > 200);
-    setShowScrollBottom(fromBottom > 200);
+    if (rafIdRef.current !== null) return;
+    rafIdRef.current = requestAnimationFrame(() => {
+      rafIdRef.current = null;
+      const el = containerRef.current;
+      if (!el) return;
+      const fromTop = el.scrollTop;
+      const fromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+      setShowScrollTop(fromTop > 200);
+      setShowScrollBottom(fromBottom > 200);
+    });
   }, []);
 
   const scrollToTop = useCallback(() => {

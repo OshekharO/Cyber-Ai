@@ -79,7 +79,7 @@ interface CodeBlockProps {
   theme: 'dark' | 'light';
 }
 
-function CodeBlock({ language, code, theme }: CodeBlockProps) {
+function CodeBlockInner({ language, code, theme }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
@@ -107,6 +107,9 @@ function CodeBlock({ language, code, theme }: CodeBlockProps) {
     </div>
   );
 }
+
+// Wrapped with React.memo to skip re-running expensive SyntaxHighlighter token parsing when code props remain unchanged
+const CodeBlock = memo(CodeBlockInner);
 
 // ── Markdown components factory ───────────────────────────────────────────────
 
