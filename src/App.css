@@ -2049,7 +2049,7 @@
   background: linear-gradient(135deg, #0080ff, var(--accent));
   box-shadow: 0 4px 16px rgba(0, 212, 255, 0.3);
   color: #fff;
-  align-self: center;
+  align-self: flex-end;
   position: relative;
   overflow: hidden;
   margin-left: 8px;
