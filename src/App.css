@@ -2061,6 +2061,7 @@
   width: 20px;
   height: 20px;
   flex-shrink: 0;
+  transform: translate(-1px, 1px);
 }
 
 [data-theme="light"] .send-btn svg {
