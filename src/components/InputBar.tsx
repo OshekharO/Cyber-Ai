@@ -1,4 +1,5 @@
 import { useRef, useCallback, useEffect, useState, memo, type KeyboardEvent } from 'react';
+import { FiSend, FiSquare } from 'react-icons/fi';
 import { CommandPalette } from './CommandPalette.tsx';
 
 const PASTE_THRESHOLD = 1_000; // chars
@@ -129,7 +130,7 @@ export const InputBar = memo(function InputBar({ input, loading, onChange, onSen
             aria-label="Stop generating"
             title="Stop generating"
           >
-            ⏹
+            <FiSquare size={16} />
           </button>
         ) : (
           <button
@@ -139,7 +140,7 @@ export const InputBar = memo(function InputBar({ input, loading, onChange, onSen
             aria-label="Send message"
             title="Send"
           >
-            ➤
+            <FiSend size={16} />
           </button>
         )}
       </div>
