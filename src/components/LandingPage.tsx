@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { SocialIcon } from 'react-social-icons';
 import {
   FiShield, FiLock, FiSearch, FiCode, FiGlobe, FiAward, FiArrowRight,
   FiMenu, FiX, FiTerminal, FiCpu, FiCheckCircle, FiChevronDown, FiZap,
@@ -576,6 +577,15 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
 
           <div className="landing-footer-bottom">
             <p>&copy; {new Date().getFullYear()} Cyber AI. Designed & Built by <strong>Saksham Shekher</strong>.</p>
+            <div className="landing-footer-socials">
+              <SocialIcon url="https://github.com/OshekharO" target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32 }} bgColor="#1e293b" fgColor="#94a3b8" />
+              <SocialIcon url="https://x.com/OshekharO" target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32 }} bgColor="#1e293b" fgColor="#94a3b8" />
+              <SocialIcon url="https://www.instagram.com/oshekhero/" target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32 }} bgColor="#1e293b" fgColor="#94a3b8" />
+              <SocialIcon url="https://t.me/duskdrifter/" target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32 }} bgColor="#1e293b" fgColor="#94a3b8" />
+              <SocialIcon url="mailto:me@saksham.eu.org" target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32 }} bgColor="#1e293b" fgColor="#94a3b8" />
+              <SocialIcon url="https://www.linkedin.com/in/oshekher/" target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32 }} bgColor="#1e293b" fgColor="#94a3b8" />
+              <SocialIcon url="https://www.reddit.com/user/oshekher/" target="_blank" rel="noopener noreferrer" style={{ width: 32, height: 32 }} bgColor="#1e293b" fgColor="#94a3b8" />
+            </div>
           </div>
         </div>
       </footer>
