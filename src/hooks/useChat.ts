@@ -1,3 +1,4 @@
+import { lookupCve } from "../api/cve.ts";
 import { scanIpAddress } from '../api/scan.ts';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { streamChat } from '../api/chat.ts';
@@ -262,7 +263,50 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     setLoading(true);
     setStreamingContent('');
 
-        // Handle /scan command
+        // Handle /cve command
+    if (trimmed.startsWith("/cve")) {
+      const target = trimmed.slice(4).trim();
+      try {
+        const cveResult = await lookupCve(target);
+        const aiMsg: Message = {
+          id: nextId.current++,
+          role: "assistant",
+          content: cveResult,
+          timestamp: new Date().toISOString(),
+        };
+        setSessions(prev => prev.map(s =>
+          s.id === currentSessionId
+            ? { ...s, messages: [...s.messages, aiMsg], updatedAt: new Date().toISOString() }
+            : s
+        ));
+        void logUserQuery({
+          query: trimmed,
+          source: "primary",
+          status: "success",
+          userId: currentScope !== "guest" ? currentScope : null,
+          sessionId: currentSessionId,
+          accessToken: currentToken,
+        });
+      } catch (err: unknown) {
+        const chatErr = err as ChatError;
+        setError(chatErr);
+        void logUserQuery({
+          query: trimmed,
+          source: "primary",
+          status: "error",
+          userId: currentScope !== "guest" ? currentScope : null,
+          sessionId: currentSessionId,
+          accessToken: currentToken,
+        });
+      } finally {
+        abortRef.current = null;
+        setLoading(false);
+        setStreamingContent("");
+      }
+      return;
+    }
+
+    // Handle /scan command
     if (trimmed.startsWith('/scan')) {
       const target = trimmed.slice(5).trim();
       try {
