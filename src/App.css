@@ -2403,19 +2403,31 @@
 .landing-nav-links {
   display: inline-flex;
   align-items: center;
-  gap: 28px;
+  gap: 6px;
 }
 
 .landing-nav-link {
   color: var(--text-secondary);
   text-decoration: none;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
-  transition: color 0.2s;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
 .landing-nav-link:hover {
-  color: var(--accent);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(0, 212, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+[data-theme="light"] .landing-nav-link:hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(2, 132, 199, 0.2);
 }
 
 .landing-nav-cta {
