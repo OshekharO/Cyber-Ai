@@ -337,6 +337,30 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
         </div>
       </section>
 
+      {/* Ticker Section */}
+      <div className="ticker" aria-hidden="true">
+        <div className="marquee-track">
+          <div className="marquee-group">
+            <span><b>GPT 5.6 Sol</b></span><span className="sep">//</span>
+            <span><b>Claude Opus 5</b></span><span className="sep">//</span>
+            <span><b>DeepSeek V4 Pro</b></span><span className="sep">//</span>
+            <span><b>Kimi K3</b></span><span className="sep">//</span>
+            <span><b>GLM 5.3</b></span><span className="sep">//</span>
+            <span>from <b>Rp170 / 1M token</b></span><span className="sep">//</span>
+            <span>pay via <b>QRIS &middot; e-wallet &middot; Crypto USDT</b></span><span className="sep">//</span>
+          </div>
+          <div className="marquee-group">
+            <span><b>GPT 5.6 Sol</b></span><span className="sep">//</span>
+            <span><b>Claude Opus 5</b></span><span className="sep">//</span>
+            <span><b>DeepSeek V4 Pro</b></span><span className="sep">//</span>
+            <span><b>Kimi K3</b></span><span className="sep">//</span>
+            <span><b>GLM 5.3</b></span><span className="sep">//</span>
+            <span>from <b>Rp170 / 1M token</b></span><span className="sep">//</span>
+            <span>pay via <b>QRIS &middot; e-wallet &middot; Crypto USDT</b></span><span className="sep">//</span>
+          </div>
+        </div>
+      </div>
+
       {/* Features Section */}
       <section id="features" className="landing-section">
         <div className="landing-container">
