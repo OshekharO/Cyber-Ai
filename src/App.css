@@ -1733,20 +1733,25 @@
 /* Markdown table */
 .table-wrapper {
   overflow-x: auto;
-  margin: 10px 0;
+  -webkit-overflow-scrolling: touch;
+  margin: 12px 0;
+  max-width: 100%;
+  border-radius: 8px;
 }
 
 .md-table {
   border-collapse: collapse;
   font-size: 13px;
   width: 100%;
+  min-width: 320px;
 }
 
 .md-table th,
 .md-table td {
   border: 1px solid var(--border);
-  padding: 6px 12px;
+  padding: 8px 12px;
   text-align: left;
+  word-break: normal;
 }
 
 .md-table th {
