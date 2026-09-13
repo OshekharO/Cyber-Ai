@@ -2545,20 +2545,26 @@
   gap: 8px;
   padding: 13px 20px;
   border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, var(--accent), #0080ff);
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  background: linear-gradient(135deg, #0284c7, #0066cc);
   color: #fff;
   font-weight: 700;
   font-size: clamp(13px, 3.5vw, 15px);
   cursor: pointer;
-  box-shadow: 0 6px 24px rgba(0, 212, 255, 0.35);
-  transition: all 0.25s ease;
+  box-shadow: 0 4px 14px rgba(0, 102, 204, 0.2);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
 }
 
 .landing-hero-primary:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 10px 36px rgba(0, 212, 255, 0.5);
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #0369a1, #0052a3);
+  border-color: rgba(0, 212, 255, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 102, 204, 0.3);
+}
+
+.landing-hero-primary:active {
+  transform: translateY(0);
 }
 
 .landing-hero-secondary {
@@ -2867,13 +2873,14 @@
   justify-content: center;
   gap: 6px;
   text-align: center;
-  transition: all 0.25s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
 }
 
 .landing-stat-card:hover {
   border-color: var(--accent);
-  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(0, 212, 255, 0.12);
+  transform: translateY(-4px) scale(1.015);
 }
 
 .landing-stat-value {
@@ -2998,13 +3005,23 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  transition: all 0.25s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
 }
 
 .landing-feature-card:hover {
   border-color: var(--accent);
-  transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3), 0 0 24px rgba(0, 212, 255, 0.1);
+  transform: translateY(-6px) scale(1.01);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35), 0 0 24px rgba(0, 212, 255, 0.12);
+}
+
+.landing-feature-card:hover .landing-feature-icon {
+  transform: scale(1.08) rotate(-2deg);
+  background: rgba(0, 212, 255, 0.2);
+}
+
+.landing-feature-icon {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), background 0.3s ease;
 }
 
 .landing-feature-top {
@@ -3065,13 +3082,24 @@
   flex-direction: column;
   gap: 12px;
   position: relative;
-  transition: all 0.25s ease;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
 }
 
 .landing-step-card:hover {
   border-color: var(--accent);
-  transform: translateY(-3px);
-  box-shadow: 0 12px 32px rgba(0, 212, 255, 0.08);
+  transform: translateY(-5px) scale(1.01);
+  box-shadow: 0 16px 36px rgba(0, 212, 255, 0.12);
+}
+
+.landing-step-card:hover .landing-step-num {
+  background: var(--accent);
+  color: #000;
+  transform: scale(1.05);
+}
+
+.landing-step-num {
+  transition: transform 0.25s ease, background 0.25s ease, color 0.25s ease;
 }
 
 .landing-step-num {
@@ -3121,7 +3149,7 @@
   color: var(--text-primary);
   font-size: clamp(12px, 2.5vw, 13px);
   font-weight: 500;
-  transition: all 0.2s ease;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
   white-space: nowrap;
 }
 
@@ -3129,7 +3157,8 @@
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-dim);
-  transform: translateY(-1px);
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 6px 16px rgba(0, 212, 255, 0.15);
 }
 
 .chip-check {
