@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { FiShield } from 'react-icons/fi';
+import { isBlacklistedEmail } from '../hooks/useAuth.ts';
 
 interface AuthScreenProps {
   loading: boolean;
@@ -26,6 +27,11 @@ export function AuthScreen({ loading, error, configError, onSignIn, onSignUp }: 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setLocalError(null);
+
+    if (isRegister && isBlacklistedEmail(email)) {
+      setLocalError('Registration from this email domain is not allowed.');
+      return;
+    }
 
     if (isRegister && password !== confirmPassword) {
       setLocalError('Passwords do not match.');
