@@ -144,10 +144,7 @@ export async function scanIpAddress(target: string): Promise<string> {
       output += `| **Network Range** | \`${data.abuse.network || 'N/A'}\` |\n\n`;
     }
 
-    // Raw JSON Details
-    output += `<details>\n<summary>📄 Raw JSON Response</summary>\n\n\`\`\`json\n${JSON.stringify(json, null, 2)}\n\`\`\`\n</details>`;
-
-    return output;
+    return output.trimEnd();
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to fetch IP details';
     return `❌ **Error scanning IP:** ${errorMsg}`;
