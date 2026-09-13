@@ -2589,22 +2589,25 @@
 .landing-hero-trust {
   display: flex;
   align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 12px;
+  flex-wrap: nowrap;
   justify-content: center;
   margin-top: 12px;
   color: var(--text-muted);
   font-size: 13px;
+  white-space: nowrap;
 }
 
 .trust-item {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
 }
 
 .trust-icon {
   color: var(--accent-green);
+  flex-shrink: 0;
 }
 
 .trust-divider {
@@ -2612,6 +2615,7 @@
   height: 4px;
   border-radius: 50%;
   background: var(--border);
+  flex-shrink: 0;
 }
 
 /* Masterpiece Interactive Terminal */
@@ -3442,12 +3446,20 @@
   }
 
   .landing-hero-trust {
-    flex-direction: column;
-    gap: 8px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .trust-item {
+    gap: 4px;
   }
 
   .trust-divider {
-    display: none;
+    display: inline-block;
+    width: 3px;
+    height: 3px;
   }
 
   .terminal-header-right {
