@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, lazy, Suspense } from 'react';
 import { Analytics } from '@vercel/analytics/react';
-import { AuthScreen } from './components/AuthScreen.tsx';
 import { ChatWorkspace } from './components/ChatWorkspace.tsx';
-import { AdminDashboard } from './components/AdminDashboard.tsx';
-import { LandingPage } from './components/LandingPage.tsx';
 import { useAuth } from './hooks/useAuth.ts';
 import { supabaseConfigError } from './lib/supabase.ts';
 import './App.css';
+
+const AuthScreen = lazy(() => import('./components/AuthScreen.tsx').then((m) => ({ default: m.AuthScreen })));
+const AdminDashboard = lazy(() => import('./components/AdminDashboard.tsx').then((m) => ({ default: m.AdminDashboard })));
+const LandingPage = lazy(() => import('./components/LandingPage.tsx').then((m) => ({ default: m.LandingPage })));
 
 const WELCOME_SEEN_KEY = 'cyber-ai-welcome-seen';
 
@@ -90,7 +91,14 @@ export default function App() {
 
   if (!auth.session) {
     return (
-      <>
+      <Suspense fallback={
+        <main className="screen-shell screen-shell--loading">
+          <div className="loading-card">
+            <div className="loading-orb" aria-hidden="true" />
+            <p>Loading...</p>
+          </div>
+        </main>
+      }>
         {welcomeModal}
         {activeView === 'auth' ? (
           <AuthScreen
@@ -104,13 +112,20 @@ export default function App() {
           <LandingPage onGetStarted={openAuth} />
         )}
         <Analytics />
-      </>
+      </Suspense>
     );
   }
 
   if (activeView === 'admin' && auth.isAdmin && auth.profile) {
     return (
-      <>
+      <Suspense fallback={
+        <main className="screen-shell screen-shell--loading">
+          <div className="loading-card">
+            <div className="loading-orb" aria-hidden="true" />
+            <p>Loading admin workspace...</p>
+          </div>
+        </main>
+      }>
         {welcomeModal}
         <AdminDashboard
           session={auth.session}
@@ -120,7 +135,7 @@ export default function App() {
           notice={auth.error}
         />
         <Analytics />
-      </>
+      </Suspense>
     );
   }
 
