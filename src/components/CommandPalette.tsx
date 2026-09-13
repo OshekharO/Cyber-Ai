@@ -20,7 +20,7 @@ const COMMANDS: Command[] = [
   { trigger: '/clear', label: '/clear', description: 'Clear conversation', template: '/clear', icon: '' },
   { trigger: '/explain', label: '/explain <tool>', description: 'Explain a security tool', template: '/explain ', icon: '' },
   { trigger: '/cve', label: '/cve <CVE-ID>', description: 'Look up a CVE', template: '/cve ', icon: '' },
-  { trigger: '/scan', label: '/scan <target>', description: 'Generate a recon command', template: '/scan ', icon: '' },
+  { trigger: '/scan', label: '/scan <ip>', description: 'Fetch IP geolocation & network info', template: '/scan ', icon: '' },
 ];
 
 interface CommandPaletteProps {

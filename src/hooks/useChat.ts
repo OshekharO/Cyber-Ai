@@ -1,3 +1,4 @@
+import { scanIpAddress } from '../api/scan.ts';
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { streamChat } from '../api/chat.ts';
 import type { ChatMessage, ChatError } from '../api/chat.ts';
@@ -260,6 +261,49 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
 
     setLoading(true);
     setStreamingContent('');
+
+        // Handle /scan command
+    if (trimmed.startsWith('/scan')) {
+      const target = trimmed.slice(5).trim();
+      try {
+        const scanResult = await scanIpAddress(target);
+        const aiMsg: Message = {
+          id: nextId.current++,
+          role: 'assistant',
+          content: scanResult,
+          timestamp: new Date().toISOString(),
+        };
+        setSessions(prev => prev.map(s =>
+          s.id === currentSessionId
+            ? { ...s, messages: [...s.messages, aiMsg], updatedAt: new Date().toISOString() }
+            : s
+        ));
+        void logUserQuery({
+          query: trimmed,
+          source: 'primary',
+          status: 'success',
+          userId: currentScope !== 'guest' ? currentScope : null,
+          sessionId: currentSessionId,
+          accessToken: currentToken,
+        });
+      } catch (err: unknown) {
+        const chatErr = err as ChatError;
+        setError(chatErr);
+        void logUserQuery({
+          query: trimmed,
+          source: 'primary',
+          status: 'error',
+          userId: currentScope !== 'guest' ? currentScope : null,
+          sessionId: currentSessionId,
+          accessToken: currentToken,
+        });
+      } finally {
+        abortRef.current = null;
+        setLoading(false);
+        setStreamingContent('');
+      }
+      return;
+    }
 
     const ctrl = new AbortController();
     abortRef.current = ctrl;
