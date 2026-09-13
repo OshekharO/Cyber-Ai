@@ -65,9 +65,6 @@ export default function App() {
         </p>
         <p className="welcome-modal-credit">
           <strong>Built with ❤️ for the cybersecurity community.</strong>
-          <br />
-          by <span className="welcome-modal-author">Saksham Shekher</span> and{' '}
-          <span className="welcome-modal-author">Ayan Kar</span>
         </p>
         <button className="welcome-modal-btn" onClick={dismissWelcomeModal}>
           Get Started
