@@ -32,6 +32,17 @@ interface SignUpInput extends SignInInput {
 
 const SESSION_KEY = 'cyber-ai-supabase-session';
 
+const BLACKLISTED_DOMAINS = ['emalupe.com'];
+
+export function isBlacklistedEmail(email: string): boolean {
+  const normalizedEmail = email.trim().toLowerCase();
+  const domain = normalizedEmail.split('@').pop();
+  if (!domain) return false;
+  return BLACKLISTED_DOMAINS.some(
+    (blacklisted) => domain === blacklisted || domain.endsWith(`.${blacklisted}`)
+  );
+}
+
 async function authRequest<T>(path: string, init: RequestInit = {}, token?: string): Promise<T> {
   const response = await fetch(buildSupabaseUrl(path), {
     ...init,
@@ -297,6 +308,10 @@ export function useAuth() {
   }, [commitSession]);
 
   const signUp = useCallback(async ({ email, password, fullName }: SignUpInput) => {
+    if (isBlacklistedEmail(email)) {
+      throw new Error('Registration from this email domain is not allowed.');
+    }
+
     if (!isSupabaseConfigured) {
       throw new Error(supabaseConfigError);
     }
