@@ -360,12 +360,21 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     ];
 
     let accumulated = '';
+    let streamRafId: number | null = null;
+
     try {
       const result = await streamChat(
         apiMessages,
         (token) => {
           accumulated += token;
-          setStreamingContent(accumulated);
+          // Throttle React state updates using requestAnimationFrame (~60fps budget)
+          // to batch rapid incoming SSE tokens, preventing main-thread lag and excessive re-renders.
+          if (streamRafId === null) {
+            streamRafId = requestAnimationFrame(() => {
+              streamRafId = null;
+              setStreamingContent(accumulated);
+            });
+          }
         },
         ctrl.signal,
       );
@@ -414,6 +423,10 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
         accessToken: currentToken,
       });
     } finally {
+      if (streamRafId !== null) {
+        cancelAnimationFrame(streamRafId);
+        streamRafId = null;
+      }
       abortRef.current = null;
       setLoading(false);
       setStreamingContent('');

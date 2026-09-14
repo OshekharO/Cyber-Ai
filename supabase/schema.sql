@@ -165,9 +165,9 @@ using (public.is_admin());
 
 create table if not exists public.admin_audit_log (
   id uuid primary key default gen_random_uuid(),
-  admin_id uuid not null references auth.users (id) on delete set null,
+  admin_id uuid references auth.users (id) on delete set null,
   action text not null,
-  target_user_id uuid not null references auth.users (id) on delete set null,
+  target_user_id uuid references auth.users (id) on delete set null,
   details jsonb,
   created_at timestamptz not null default now()
 );

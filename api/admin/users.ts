@@ -198,12 +198,29 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         return;
       }
 
+      // Fetch target user email/details before deletion so audit log retains context even after deletion
+      let targetEmail: string | null = null;
+      try {
+        const userRes = await supabaseRequest(`/auth/v1/admin/users/${userId}`, { method: 'GET' }, supabaseServiceRoleKey);
+        if (userRes.ok) {
+          const u = await userRes.json() as { email?: string };
+          targetEmail = u.email ?? null;
+        }
+      } catch {
+        // Ignore error fetching target user email
+      }
+
+      // Record audit log before user deletion so target_user_id exists during foreign key insert
+      try {
+        await logAudit(user.id, 'delete_user', userId, { target_email: targetEmail });
+      } catch (auditErr) {
+        console.error('Failed to log deletion audit:', auditErr);
+      }
+
       const authResponse = await supabaseRequest(`/auth/v1/admin/users/${userId}`, { method: 'DELETE' }, supabaseServiceRoleKey);
       if (!authResponse.ok) {
         throw new Error(`Failed to delete user (${authResponse.status}).`);
       }
-
-      void logAudit(user.id, 'delete_user', userId);
 
       json(res, 200, { ok: true });
       return;

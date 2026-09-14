@@ -136,7 +136,7 @@ export default async function handler(req: { method: string; query?: Record<stri
         adminName: profilesMap.get(row.admin_id)?.full_name ?? null,
         action: row.action,
         targetUserId: row.target_user_id,
-        targetEmail: profilesMap.get(row.target_user_id)?.email ?? null,
+        targetEmail: profilesMap.get(row.target_user_id)?.email ?? (row.details as { target_email?: string } | null)?.target_email ?? null,
         targetName: profilesMap.get(row.target_user_id)?.full_name ?? null,
         details: row.details,
         createdAt: row.created_at,
