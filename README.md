@@ -1,6 +1,6 @@
 # Cyber AI 🛡️
 
-> An AI-powered cybersecurity assistant — built with React, TypeScript, Vite, and Supabase.
+> Your AI-powered cybersecurity assistant for threat analysis, CTF, and secure coding.
 
 ![Version](https://img.shields.io/badge/version-0.0.0-blue)
 ![React](https://img.shields.io/badge/React-19-61DAFB)
