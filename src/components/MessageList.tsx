@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { useRef, useEffect, useState, useCallback, useMemo, memo } from 'react';
 import { MessageBubble, StreamingBubble } from './MessageBubble.tsx';
 import { TypingIndicator } from './TypingIndicator.tsx';
 import { ErrorBanner } from './ErrorBanner.tsx';
@@ -18,7 +18,9 @@ interface MessageListProps {
   onDismissError: () => void;
 }
 
-export function MessageList({
+// Wrapped with React.memo to prevent unnecessary MessageList re-renders and virtual DOM diffing
+// when user types in input bar or when unrelated ChatWorkspace state updates.
+export const MessageList = memo(function MessageList({
   messages,
   loading,
   streamingContent,
@@ -144,4 +146,4 @@ export function MessageList({
       )}
     </div>
   );
-}
+});
