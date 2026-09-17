@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { FiSearch, FiX } from 'react-icons/fi';
 
 interface MessageSearchProps {
@@ -7,7 +8,8 @@ interface MessageSearchProps {
   onClose: () => void;
 }
 
-export function MessageSearch({ query, matchCount, onChange, onClose }: MessageSearchProps) {
+// Wrapped in React.memo to skip re-renders when parent ChatWorkspace updates on unrelated state changes
+export const MessageSearch = memo(function MessageSearch({ query, matchCount, onChange, onClose }: MessageSearchProps) {
   return (
     <div className="message-search" role="search" aria-label="Search messages">
       <FiSearch className="search-icon" aria-hidden="true" size={20} />
@@ -30,4 +32,4 @@ export function MessageSearch({ query, matchCount, onChange, onClose }: MessageS
       </button>
     </div>
   );
-}
+});
