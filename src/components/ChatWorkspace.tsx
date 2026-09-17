@@ -20,7 +20,24 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
   const chat = useChat(userId, sessionToken ?? undefined);
   const [input, setInput] = useState('');
 
+  const {
+    messages,
+    searchOpen,
+    toggleSearch,
+    newSession,
+    toggleTheme,
+    sendMessage,
+    setSidebarOpen,
+    setError,
+    clearAllData
+  } = chat;
+
+  const hasMessages = messages.length > 0;
+
   // Keyboard shortcuts
+  // Optimization: Depend on specific stable state/callbacks instead of the entire `chat` object reference.
+  // The `chat` object is recreated on every token during streaming and on every state change,
+  // causing constant removal and re-binding of global 'keydown' event listeners.
   useEffect(() => {
     const handleKeyboardShortcuts = (e: KeyboardEvent) => {
       const isMac = navigator.userAgent.toLowerCase().includes('mac');
@@ -29,38 +46,36 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
       // Ctrl/Cmd + K - Toggle search
       if (modifier && e.key === 'k') {
         e.preventDefault();
-        if (!chat.searchOpen && chat.messages.length > 0) {
-          chat.toggleSearch();
-        } else if (chat.searchOpen) {
-          chat.toggleSearch();
+        if (!searchOpen && hasMessages) {
+          toggleSearch();
+        } else if (searchOpen) {
+          toggleSearch();
         }
       }
 
       // Ctrl/Cmd + Shift + N - New session
       if (modifier && e.shiftKey && e.key === 'N') {
         e.preventDefault();
-        chat.newSession();
+        newSession();
       }
 
       // Ctrl/Cmd + Shift + L - Toggle theme
       if (modifier && e.shiftKey && e.key === 'L') {
         e.preventDefault();
-        chat.toggleTheme();
+        toggleTheme();
       }
 
       // Escape - Close search if open
-      if (e.key === 'Escape' && chat.searchOpen) {
-        chat.toggleSearch();
+      if (e.key === 'Escape' && searchOpen) {
+        toggleSearch();
       }
     };
 
     window.addEventListener('keydown', handleKeyboardShortcuts);
     return () => window.removeEventListener('keydown', handleKeyboardShortcuts);
-  }, [chat]);
+  }, [searchOpen, hasMessages, toggleSearch, newSession, toggleTheme]);
 
-  const { sendMessage, setSidebarOpen, setError, clearAllData } = chat;
-
-  // Optimize lastUserMessage lookup to iterate backward without allocating and reversing a array copy
+  // Optimize lastUserMessage lookup to iterate backward without allocating and reversing an array copy
   const lastUserMessage = useMemo(() => {
     for (let i = chat.messages.length - 1; i >= 0; i--) {
       if (chat.messages[i].role === 'user') return chat.messages[i];
