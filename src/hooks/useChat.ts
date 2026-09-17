@@ -62,8 +62,10 @@ function loadTheme(): 'dark' | 'light' {
 function computeMaxId(sessions: Session[]): number {
   let max = 0;
   for (const s of sessions) {
-    for (const m of s.messages) {
-      if (m.id > max) max = m.id;
+    const msgs = s.messages;
+    if (msgs.length > 0) {
+      const lastId = msgs[msgs.length - 1].id;
+      if (lastId > max) max = lastId;
     }
   }
   return max;
