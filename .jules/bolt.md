@@ -9,3 +9,7 @@
 ## 2026-09-17 - Max ID Computation in Session Trees
 **Learning:** In session-based chat structures where messages are assigned auto-incrementing integer IDs sequentially, checking only the last message of each session reduces initial ID calculation complexity from $O(N)$ (where $N$ is total messages across all sessions) to $O(S)$ (where $S$ is the number of sessions).
 **Action:** Avoid full nested iterations over message arrays when checking max auto-incrementing message IDs across session trees.
+
+## 2026-09-18 - Hoisting Static Data Arrays Outside React Render Loop
+**Learning:** In large React marketing/landing components, defining static array datasets (presets, features, FAQs, workflow steps, tags) inside the component body causes JavaScript engines to re-allocate new array objects, nested objects, and React element trees on every state update or user interaction (e.g., toggling tabs or accordion items). Hoisting these immutable data structures to module scope eliminates repetitive object allocations and reduces garbage collection pressure during user interactions.
+**Action:** Move static data structures, configuration arrays, and constant lists outside React component render functions to module scope.
