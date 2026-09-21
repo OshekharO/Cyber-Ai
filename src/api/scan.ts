@@ -54,10 +54,63 @@ interface IpInfoResponse {
   error?: string | { title?: string; message?: string };
 }
 
+interface CacheEntry {
+  value: string;
+  expiresAt: number;
+}
+
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_CACHE_SIZE = 100;
+
+// In-memory LRU Map cache for IP scan results
+const scanCache = new Map<string, CacheEntry>();
+
+function getCachedResult(key: string): string | null {
+  const entry = scanCache.get(key);
+  if (!entry) {
+    return null;
+  }
+
+  if (Date.now() > entry.expiresAt) {
+    scanCache.delete(key);
+    return null;
+  }
+
+  // Refresh LRU order by deleting and re-setting
+  scanCache.delete(key);
+  scanCache.set(key, entry);
+  return entry.value;
+}
+
+function setCachedResult(key: string, value: string): void {
+  // If already at capacity, delete oldest item (first key in Map insertion order)
+  if (scanCache.size >= MAX_CACHE_SIZE && !scanCache.has(key)) {
+    const oldestKey = scanCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      scanCache.delete(oldestKey);
+    }
+  }
+
+  scanCache.set(key, {
+    value,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+}
+
+/** Clear cache - helpful for testing */
+export function clearScanCache(): void {
+  scanCache.clear();
+}
+
 export async function scanIpAddress(target: string): Promise<string> {
   const ip = target.trim();
   if (!ip) {
     return 'Please provide a valid IP address. Usage: `/scan <ip>`';
+  }
+
+  const cached = getCachedResult(ip);
+  if (cached) {
+    return cached;
   }
 
   const targetUrl = `https://ipinfo.io/widget/demo/${encodeURIComponent(ip)}`;
@@ -144,7 +197,9 @@ export async function scanIpAddress(target: string): Promise<string> {
       output += `| **Network Range** | \`${data.abuse.network || 'N/A'}\` |\n\n`;
     }
 
-    return output.trimEnd();
+    const result = output.trimEnd();
+    setCachedResult(ip, result);
+    return result;
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to fetch IP details';
     return `❌ **Error scanning IP:** ${errorMsg}`;
