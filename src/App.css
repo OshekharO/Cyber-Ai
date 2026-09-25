@@ -1102,9 +1102,17 @@
   color: #e2e8f0;
 }
 
-.auth-alert,
+.auth-alert--error,
 .admin-error {
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}
+
+.auth-alert--info {
+  border-color: rgba(59, 130, 246, 0.4);
+  background: rgba(59, 130, 246, 0.1);
+  color: #93c5fd;
 }
 
 [data-theme="light"] .admin-error {

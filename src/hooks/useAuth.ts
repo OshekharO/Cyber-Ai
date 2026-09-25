@@ -53,8 +53,40 @@ async function authRequest<T>(path: string, init: RequestInit = {}, token?: stri
   });
 
   if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `Request failed (${response.status}).`);
+    const rawText = await response.text();
+    let errorMessage = '';
+
+    try {
+      const parsed = JSON.parse(rawText) as Record<string, unknown>;
+      const code = String(parsed.error_code || parsed.code || '');
+      const msg = String(parsed.msg || parsed.message || parsed.error_description || '');
+
+      if (
+        code === 'user_already_exists' ||
+        code === 'identity_already_exists' ||
+        msg.toLowerCase().includes('user already registered') ||
+        msg.toLowerCase().includes('already registered') ||
+        msg.toLowerCase().includes('already exists')
+      ) {
+        errorMessage = 'An account with this email address already exists. Please sign in or use a different email.';
+      } else if (
+        code === 'invalid_credentials' ||
+        msg.toLowerCase().includes('invalid login credentials') ||
+        msg.toLowerCase().includes('invalid credentials')
+      ) {
+        errorMessage = 'Invalid email or password.';
+      } else if (msg) {
+        errorMessage = msg;
+      }
+    } catch {
+      // Raw string if not JSON
+    }
+
+    if (!errorMessage) {
+      errorMessage = rawText || `Request failed (${response.status}).`;
+    }
+
+    throw new Error(errorMessage);
   }
 
   return parseJson<T>(response);
@@ -317,6 +349,11 @@ export function useAuth() {
     }
 
     const payload = await signUpWithPassword(email, password, fullName);
+    const userObject = payload.user ?? (payload as unknown as SupabaseAuthUser);
+    if (userObject?.identities && userObject.identities.length === 0) {
+      throw new Error('An account with this email address already exists. Please sign in or use a different email.');
+    }
+
     const nextSession = toSession(payload);
     if (!nextSession) {
       setError('Registration successful. Check your email to confirm your account, then sign in.');
