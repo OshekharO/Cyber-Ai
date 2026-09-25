@@ -66,11 +66,22 @@ export function AuthScreen({ loading, error, configError, onSignIn, onSignUp }: 
         </div>
 
         <div className="auth-tabs" role="tablist" aria-label="Authentication mode">
-          <button type="button" className={`auth-tab${!isRegister ? ' auth-tab--active' : ''}`} onClick={() => setMode('login')} role="tab" aria-selected={!isRegister}>Login</button>
-          <button type="button" className={`auth-tab${isRegister ? ' auth-tab--active' : ''}`} onClick={() => setMode('register')} role="tab" aria-selected={isRegister}>Register</button>
+          <button type="button" className={`auth-tab${!isRegister ? ' auth-tab--active' : ''}`} onClick={() => { setMode('login'); setLocalError(null); }} role="tab" aria-selected={!isRegister}>Login</button>
+          <button type="button" className={`auth-tab${isRegister ? ' auth-tab--active' : ''}`} onClick={() => { setMode('register'); setLocalError(null); }} role="tab" aria-selected={isRegister}>Register</button>
         </div>
 
-        {activeError && <div className="auth-alert" role="alert">{activeError}</div>}
+        {activeError && (
+          <div
+            className={`auth-alert${
+              activeError.toLowerCase().includes('successful') || activeError.toLowerCase().includes('check your email')
+                ? ' auth-alert--info'
+                : ' auth-alert--error'
+            }`}
+            role="alert"
+          >
+            {activeError}
+          </div>
+        )}
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {isRegister && (
