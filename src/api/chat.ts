@@ -197,9 +197,7 @@ export async function streamChat(
   // the user cancelling or the timeout aborts the same fetch.
   const timeoutCtrl = new AbortController();
   const timeoutId = setTimeout(() => timeoutCtrl.abort(), PRIMARY_API_TIMEOUT_MS);
-  const combinedSignal = AbortSignal.any
-    ? AbortSignal.any([signal, timeoutCtrl.signal])
-    : signal; // fallback for older runtimes without AbortSignal.any
+  const combinedSignal = AbortSignal.any([signal, timeoutCtrl.signal]);
 
   try {
     const result = await tryModels(messages, combinedSignal);
