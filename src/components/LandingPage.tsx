@@ -397,6 +397,25 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                   className="landing-badge-img landing-badge-img--dark"
                 />
               </a>
+
+              <a
+                href="https://smollist.com/projects/cyber-ai?utm_source=badge"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="landing-badge-link"
+                title="Featured on Smol List"
+              >
+                <img
+                  src="https://smollist.com/smollist/images/badges/featured-on-light.svg"
+                  alt="Featured on Smol List"
+                  className="landing-badge-img landing-badge-img--light"
+                />
+                <img
+                  src="https://smollist.com/smollist/images/badges/featured-on-dark.svg"
+                  alt="Featured on Smol List"
+                  className="landing-badge-img landing-badge-img--dark"
+                />
+              </a>
             </div>
           </div>
         </div>
