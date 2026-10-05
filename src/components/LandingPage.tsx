@@ -231,6 +231,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
           <div className={`landing-nav-links${menuOpen ? ' landing-nav-links--open' : ''}`}>
             <a href="#features" className="landing-nav-link" onClick={() => setMenuOpen(false)}>Features</a>
             <a href="#terminal" className="landing-nav-link" onClick={() => setMenuOpen(false)}>Terminal</a>
+            <a href="#featured" className="landing-nav-link" onClick={() => setMenuOpen(false)}>Featured On</a>
             <a href="#how-it-works" className="landing-nav-link" onClick={() => setMenuOpen(false)}>How it works</a>
             <a href="#use-cases" className="landing-nav-link" onClick={() => setMenuOpen(false)}>Use cases</a>
             <a href="#faq" className="landing-nav-link" onClick={() => setMenuOpen(false)}>FAQ</a>
@@ -368,6 +369,35 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 <span className="landing-stat-detail">{stat.detail}</span>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured On Section */}
+      <section id="featured" className="landing-featured">
+        <div className="landing-container">
+          <div className="landing-featured-inner">
+            <span className="landing-featured-label">Featured On</span>
+            <div className="landing-featured-badges">
+              <a
+                href="https://ailaun.ch/projects/cyber-ai?utm_source=badge"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="landing-badge-link"
+                title="Featured on AI Launch"
+              >
+                <img
+                  src="https://ailaun.ch/ailaunch/images/badges/featured-on-light.svg"
+                  alt="Featured on AI Launch"
+                  className="landing-badge-img landing-badge-img--light"
+                />
+                <img
+                  src="https://ailaun.ch/ailaunch/images/badges/featured-on-dark.svg"
+                  alt="Featured on AI Launch"
+                  className="landing-badge-img landing-badge-img--dark"
+                />
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -572,6 +602,7 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
               <h4 className="landing-footer-heading">Navigation</h4>
               <a href="#features" className="footer-link">Features</a>
               <a href="#terminal" className="footer-link">Live Terminal</a>
+              <a href="#featured" className="footer-link">Featured On</a>
               <a href="#how-it-works" className="footer-link">How it works</a>
               <a href="#faq" className="footer-link">FAQ</a>
             </div>

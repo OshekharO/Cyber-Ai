@@ -2939,6 +2939,83 @@
   }
 }
 
+/* Featured On Section */
+.landing-featured {
+  padding: 32px 0;
+  border-top: 1px solid var(--border);
+  background: rgba(10, 14, 26, 0.4);
+}
+
+[data-theme="light"] .landing-featured {
+  background: rgba(248, 250, 252, 0.6);
+}
+
+.landing-featured-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.landing-featured-label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.landing-featured-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.landing-badge-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.landing-badge-link:hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(0, 212, 255, 0.15);
+}
+
+.landing-badge-img {
+  height: 44px;
+  width: auto;
+  display: block;
+}
+
+/* Theme specific badge images */
+.landing-badge-img--dark {
+  display: block;
+}
+
+.landing-badge-img--light {
+  display: none;
+}
+
+[data-theme="light"] .landing-badge-img--dark {
+  display: none;
+}
+
+[data-theme="light"] .landing-badge-img--light {
+  display: block;
+}
+
 /* Stats Section - 2 columns on mobile, 4 on desktop */
 .landing-stats {
   border-top: 1px solid var(--border);
