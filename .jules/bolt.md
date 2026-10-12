@@ -29,3 +29,8 @@
 ## 2026-10-15 - Avoiding Object.entries Array Allocations in URL Builders
 **Learning:** Calling `Object.entries(query)` inside hot URL builder functions allocates an intermediate key-value tuple array for every query object. Replacing `Object.entries` with a `for...in` loop (with `Object.prototype.hasOwnProperty.call` check) avoids intermediate array/tuple object creations, delivering a ~45% speedup (~913k ops/sec vs ~625k ops/sec) and reduced memory allocation overhead.
 **Action:** Use `for...in` or indexed loops when iterating over query parameters or key-value dictionary objects in frequently called utility functions instead of `Object.entries`.
+
+
+## 2026-10-20 - Catching Promise Rejections in React Lazy Component Loading
+**Learning:** Dynamic imports inside `React.lazy()` factories can fail due to network drops, script loading errors, or chunk version mismatches after deployments. Wrapping `React.lazy()` import promise chains with `.catch()` allows handling loading failures gracefully by logging the error and returning a fallback error component `{ default: LazyLoadErrorFallback }` with a page reload option, preventing unhandled promise rejections and app crashes.
+**Action:** Always append `.catch()` error handling when lazy loading dynamic imports in `React.lazy()`.
