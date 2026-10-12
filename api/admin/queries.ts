@@ -105,20 +105,19 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     const search = (req.query?.q as string | undefined)?.trim();
     const source = req.query?.source as string | undefined;
 
-    const params: Record<string, string | number | undefined> = {
-      select: 'id,user_id,query,source,status,session_id,created_at,profiles(email,full_name)',
-      order: 'created_at.desc',
-      limit: perPage,
-      offset: (page - 1) * perPage,
-    };
+    const params = new URLSearchParams();
+    params.append('select', 'id,user_id,query,source,status,session_id,created_at,profiles(email,full_name)');
+    params.append('order', 'created_at.desc');
+    params.append('limit', String(perPage));
+    params.append('offset', String((page - 1) * perPage));
     if (search) {
-      params.query = `ilike.*${search.replace(/[*/%?]/g, '')}*`;
+      params.append('query', `ilike.*${search.replace(/[*/%?]/g, '')}*`);
     }
     if (source === 'primary' || source === 'brave') {
-      params.source = `eq.${source}`;
+      params.append('source', `eq.${source}`);
     }
 
-    const listResponse = await supabaseRequest(`/rest/v1/user_queries?${new URLSearchParams(params as Record<string, string>).toString()}`, { method: 'GET' }, supabaseServiceRoleKey);
+    const listResponse = await supabaseRequest(`/rest/v1/user_queries?${params.toString()}`, { method: 'GET' }, supabaseServiceRoleKey);
     if (!listResponse.ok) {
       throw new Error(`Failed to load queries (${listResponse.status}).`);
     }

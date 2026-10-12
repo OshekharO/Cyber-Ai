@@ -96,14 +96,11 @@ export default async function handler(req: { method: string; query?: Record<stri
     const perPage = Math.min(Math.max(Number(req.query?.perPage ?? 50) || 50, 1), 200);
 
 
-    const params: Record<string, string | number | undefined> = {
-      select: 'id,admin_id,action,target_user_id,details,created_at',
-      order: 'created_at.desc',
-      limit: perPage,
-      offset: (page - 1) * perPage,
-    };
-
-    const queryParams = new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)])).toString();
+    const queryParams = new URLSearchParams();
+    queryParams.append('select', 'id,admin_id,action,target_user_id,details,created_at');
+    queryParams.append('order', 'created_at.desc');
+    queryParams.append('limit', String(perPage));
+    queryParams.append('offset', String((page - 1) * perPage));
     const listResponse = await supabaseRequest(`/rest/v1/admin_audit_log?${queryParams}`, { method: 'GET' }, supabaseServiceRoleKey);
     if (!listResponse.ok) {
       throw new ApiError(500, `Failed to load audit log.`);
