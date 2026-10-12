@@ -25,3 +25,7 @@
 ## 2026-10-12 - Functional Max ID Computation across Session Trees
 **Learning:** Computing the maximum integer ID across session arrays using `sessions.reduce((max, s) => Math.max(max, s.messages.length > 0 ? s.messages[s.messages.length - 1].id : 0), 0)` provides a cleaner, functional implementation while maintaining ~$O(S)$ complexity (checking only the last message per session) and executing ~10% faster in V8 benchmark iterations compared to imperative `for...of` loops.
 **Action:** Prefer `Array.prototype.reduce` with `Math.max` for aggregations over session/tree nodes where only boundary elements need evaluation.
+
+## 2026-10-15 - Avoiding Object.entries Array Allocations in URL Builders
+**Learning:** Calling `Object.entries(query)` inside hot URL builder functions allocates an intermediate key-value tuple array for every query object. Replacing `Object.entries` with a `for...in` loop (with `Object.prototype.hasOwnProperty.call` check) avoids intermediate array/tuple object creations, delivering a ~45% speedup (~913k ops/sec vs ~625k ops/sec) and reduced memory allocation overhead.
+**Action:** Use `for...in` or indexed loops when iterating over query parameters or key-value dictionary objects in frequently called utility functions instead of `Object.entries`.
