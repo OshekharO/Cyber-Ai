@@ -60,15 +60,10 @@ function loadTheme(): 'dark' | 'light' {
 }
 
 function computeMaxId(sessions: Session[]): number {
-  let max = 0;
-  for (const s of sessions) {
-    const msgs = s.messages;
-    if (msgs.length > 0) {
-      const lastId = msgs[msgs.length - 1].id;
-      if (lastId > max) max = lastId;
-    }
-  }
-  return max;
+  return sessions.reduce(
+    (max, s) => Math.max(max, s.messages.length > 0 ? s.messages[s.messages.length - 1].id : 0),
+    0
+  );
 }
 
 // ── Hook ─────────────────────────────────────────────────────────────────────
