@@ -5,9 +5,46 @@ import { useAuth } from './hooks/useAuth.ts';
 import { supabaseConfigError } from './lib/supabase.ts';
 import './App.css';
 
-const AuthScreen = lazy(() => import('./components/AuthScreen.tsx').then((m) => ({ default: m.AuthScreen })));
-const AdminDashboard = lazy(() => import('./components/AdminDashboard.tsx').then((m) => ({ default: m.AdminDashboard })));
-const LandingPage = lazy(() => import('./components/LandingPage.tsx').then((m) => ({ default: m.LandingPage })));
+function LazyLoadErrorFallback() {
+  return (
+    <main className="screen-shell screen-shell--loading">
+      <div className="loading-card">
+        <div className="welcome-modal-icon" aria-hidden="true">⚠️</div>
+        <h2>Failed to load screen</h2>
+        <p>A network error occurred while loading this view.</p>
+        <button className="welcome-modal-btn" onClick={() => window.location.reload()}>
+          Reload Page
+        </button>
+      </div>
+    </main>
+  );
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function lazyWithCatch<T extends React.ComponentType<any>>(
+  factory: () => Promise<{ default: T }>,
+  componentName: string
+) {
+  return lazy(() =>
+    factory().catch((err) => {
+      console.error(`Failed to lazy load component '${componentName}':`, err);
+      return { default: LazyLoadErrorFallback as unknown as T };
+    })
+  );
+}
+
+const AuthScreen = lazyWithCatch(
+  () => import('./components/AuthScreen.tsx').then((m) => ({ default: m.AuthScreen })),
+  'AuthScreen'
+);
+const AdminDashboard = lazyWithCatch(
+  () => import('./components/AdminDashboard.tsx').then((m) => ({ default: m.AdminDashboard })),
+  'AdminDashboard'
+);
+const LandingPage = lazyWithCatch(
+  () => import('./components/LandingPage.tsx').then((m) => ({ default: m.LandingPage })),
+  'LandingPage'
+);
 
 const WELCOME_SEEN_KEY = 'cyber-ai-welcome-seen';
 
