@@ -89,7 +89,7 @@ async function callBraveAPI(
 
   // Brave API fallback only supports a single message in the array.
   // We take the last user message and prepend the system instructions.
-  const lastUserMsg = messages.filter(m => m.role === 'user').pop();
+  const lastUserMsg = messages.findLast(m => m.role === 'user');
 
   let finalContent = `INSTRUCTIONS: ${SYSTEM_PROMPT}\n\n`;
   finalContent += lastUserMsg ? lastUserMsg.content : '';

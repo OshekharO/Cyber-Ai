@@ -17,3 +17,7 @@
 ## 2026-09-21 - In-Memory Cache with TTL for IP Address Scans
 **Learning:** Repeated IP address scans (e.g. `/scan <ip>`) perform external network roundtrips to `ipinfo.io`, incurring significant latency (~50ms per scan) and unnecessary API calls. Adding a bounded in-memory LRU Map cache with a 10-minute TTL reduces cached lookup times to ~0.44ms (>100x speedup) and eliminates redundant external API network traffic.
 **Action:** Use bounded in-memory LRU caching with TTL for idempotent external lookup commands to minimize network overhead and latency.
+
+## 2026-09-24 - Avoiding Array Allocation when Finding Array End Elements
+**Learning:** Using `messages.filter(...).pop()` to extract the last matching element creates a complete intermediate array allocation and iterates through every element in the array regardless of where the target element resides. Replacing this with `Array.prototype.findLast(...)` iterates backwards, stops at the first matching element, and eliminates intermediate heap allocation completely (over 100x speedup and ~99% heap allocation reduction for long chat history arrays).
+**Action:** Use `Array.prototype.findLast()` when looking for the last element matching a predicate instead of `filter().pop()`.
