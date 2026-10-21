@@ -21,10 +21,9 @@ export function AuditTab({ accessToken }: AuditTabProps) {
     async function fetchAuditLogs() {
       setLoadingAudit(true);
       try {
-        const params = new URLSearchParams({
-          page: String(auditPage),
-          perPage: String(AUDIT_PAGE_SIZE),
-        });
+        const params = new URLSearchParams();
+        params.append('page', String(auditPage));
+        params.append('perPage', String(AUDIT_PAGE_SIZE));
 
         const response = await fetch(`/api/admin/audit?${params.toString()}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
