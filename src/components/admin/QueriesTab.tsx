@@ -32,12 +32,11 @@ export function QueriesTab({ accessToken }: QueriesTabProps) {
     async function fetchQueries() {
       setLoadingQueries(true);
       try {
-        const params = new URLSearchParams({
-          page: String(queryPage),
-          perPage: String(QUERY_PAGE_SIZE),
-        });
-        if (debouncedQuerySearch.trim()) params.set('q', debouncedQuerySearch.trim());
-        if (querySource !== 'all') params.set('source', querySource);
+        const params = new URLSearchParams();
+        params.append('page', String(queryPage));
+        params.append('perPage', String(QUERY_PAGE_SIZE));
+        if (debouncedQuerySearch.trim()) params.append('q', debouncedQuerySearch.trim());
+        if (querySource !== 'all') params.append('source', querySource);
 
         const response = await fetch(`/api/admin/queries?${params.toString()}`, {
           headers: { Authorization: `Bearer ${accessToken}` },

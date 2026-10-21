@@ -38,3 +38,4 @@
 ## 2026-10-22 - Direct URLSearchParams Append vs Object Dictionary Reflection
 **Learning:** Passing plain dictionary objects (`new URLSearchParams(params as Record<string, string>)` or `Object.entries(params)`) to `URLSearchParams` forces V8's C++ bindings to iterate over own enumerable object properties and perform dynamic type checking/reflection. Instantiating `new URLSearchParams()` empty and calling `params.append('key', String(val))` directly invokes native C++ methods with explicit primitive string arguments, avoiding property enumeration and type assertions while yielding a ~58% to ~67% throughput increase (~556k ops/sec vs ~332k ops/sec).
 **Action:** Prefer constructing `URLSearchParams` empty and using `append()` with explicit `String()` conversions over passing generic object dictionaries with type assertions.
+## 2026-10-25 - Direct URLSearchParams Append & Object property iteration in helper utilities
