@@ -105,16 +105,35 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       : req.body ?? {}) as Record<string, unknown>;
 
     if (req.method === 'GET') {
-      const page = Math.max(Number(req.query?.page ?? 1) || 1, 1);
-      const perPage = Math.min(Math.max(Number(req.query?.perPage ?? 100) || 100, 1), 200);
+      const allAuthUsers: AuthUserItem[] = [];
+      let pageNum = 1;
 
-      const listResponse = await supabaseRequest('/auth/v1/admin/users?per_page=1000', { method: 'GET' }, supabaseServiceRoleKey);
-      if (!listResponse.ok) {
-        throw new Error(`Failed to load users (${listResponse.status}).`);
+      while (true) {
+        const listResponse = await supabaseRequest(`/auth/v1/admin/users?per_page=1000&page=${pageNum}`, { method: 'GET' }, supabaseServiceRoleKey);
+        if (!listResponse.ok) {
+          throw new Error(`Failed to load users (${listResponse.status}).`);
+        }
+
+        const listPayload = await listResponse.json() as { users?: AuthUserItem[] };
+        const fetchedUsers = listPayload.users ?? [];
+        allAuthUsers.push(...fetchedUsers);
+
+        if (fetchedUsers.length < 1000) {
+          break;
+        }
+        pageNum++;
       }
 
-      const listPayload = await listResponse.json() as { users?: AuthUserItem[] };
-      const users = (listPayload.users ?? []).slice((page - 1) * perPage, page * perPage);
+      const rawPage = Array.isArray(req.query?.page) ? req.query?.page[0] : req.query?.page;
+      const rawPerPage = Array.isArray(req.query?.perPage) ? req.query?.perPage[0] : req.query?.perPage;
+
+      let users = allAuthUsers;
+      if (rawPage !== undefined || rawPerPage !== undefined) {
+        const page = Math.max(Number(rawPage ?? 1) || 1, 1);
+        const perPage = Math.min(Math.max(Number(rawPerPage ?? 100) || 100, 1), 200);
+        users = users.slice((page - 1) * perPage, page * perPage);
+      }
+
       const ids = users.map((userItem) => userItem.id);
 
       if (ids.length === 0) {
@@ -122,17 +141,25 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         return;
       }
 
-      const profilesResponse = await supabaseRequest(
-        `/rest/v1/profiles?select=id,email,full_name,role,created_at,updated_at&id=in.(${ids.join(',')})`,
-        { method: 'GET' },
-        supabaseServiceRoleKey,
-      );
+      const CHUNK_SIZE = 100;
+      const profiles: Array<{ id: string; email: string | null; full_name: string | null; role: 'user' | 'admin'; created_at: string; updated_at: string }> = [];
 
-      if (!profilesResponse.ok) {
-        throw new Error(`Failed to load profiles (${profilesResponse.status}).`);
+      for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+        const chunkIds = ids.slice(i, i + CHUNK_SIZE);
+        const profilesResponse = await supabaseRequest(
+          `/rest/v1/profiles?select=id,email,full_name,role,created_at,updated_at&id=in.(${chunkIds.join(',')})`,
+          { method: 'GET' },
+          supabaseServiceRoleKey,
+        );
+
+        if (!profilesResponse.ok) {
+          throw new Error(`Failed to load profiles (${profilesResponse.status}).`);
+        }
+
+        const chunkProfiles = await profilesResponse.json() as Array<{ id: string; email: string | null; full_name: string | null; role: 'user' | 'admin'; created_at: string; updated_at: string }>;
+        profiles.push(...chunkProfiles);
       }
 
-      const profiles = await profilesResponse.json() as Array<{ id: string; email: string | null; full_name: string | null; role: 'user' | 'admin'; created_at: string; updated_at: string }>;
       const profileMap = new Map(profiles.map((profile) => [profile.id, profile]));
 
       json(res, 200, {
