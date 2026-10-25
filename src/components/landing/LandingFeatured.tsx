@@ -6,39 +6,39 @@ export function LandingFeatured() {
           <span className="landing-featured-label">Featured On</span>
           <div className="landing-featured-badges">
             <a
-              href="https://ailaun.ch/projects/cyber-ai?utm_source=badge"
+              href="https://peerlist.io/oshekharo/project/cyber-ai--cybersecurity-assistant"
               target="_blank"
               rel="noopener noreferrer"
               className="landing-badge-link"
-              title="Featured on AI Launch"
+              title="Featured on Peerlist"
             >
               <img
-                src="https://ailaun.ch/ailaunch/images/badges/featured-on-light.svg"
-                alt="Featured on AI Launch"
+                src="https://dqy38fnwh4fqs.cloudfront.net/website/peerlist-logo-full-light.svg"
+                alt="Featured on Peerlist"
                 className="landing-badge-img landing-badge-img--light"
               />
               <img
-                src="https://ailaun.ch/ailaunch/images/badges/featured-on-dark.svg"
-                alt="Featured on AI Launch"
+                src="https://dqy38fnwh4fqs.cloudfront.net/website/peerlist-logo-full-dark.svg"
+                alt="Featured on Peerlist"
                 className="landing-badge-img landing-badge-img--dark"
               />
             </a>
 
             <a
-              href="https://smollist.com/projects/cyber-ai?utm_source=badge"
+              href="https://reporanker.com/repos/OshekharO/Cyber-Ai"
               target="_blank"
               rel="noopener noreferrer"
               className="landing-badge-link"
-              title="Featured on Smol List"
+              title="Featured on RepoRanker"
             >
               <img
                 src="https://smollist.com/smollist/images/badges/featured-on-light.svg"
-                alt="Featured on Smol List"
+                alt="Featured on RepoRanker"
                 className="landing-badge-img landing-badge-img--light"
               />
               <img
                 src="https://smollist.com/smollist/images/badges/featured-on-dark.svg"
-                alt="Featured on Smol List"
+                alt="Featured on RepoRanker"
                 className="landing-badge-img landing-badge-img--dark"
               />
             </a>
