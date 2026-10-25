@@ -32,12 +32,12 @@ export function LandingFeatured() {
               title="Featured on RepoRanker"
             >
               <img
-                src="https://reporanker.com/peerlist-badge.svg"
+                src="https://smollist.com/smollist/images/badges/featured-on-light.svg"
                 alt="Featured on RepoRanker"
                 className="landing-badge-img landing-badge-img--light"
               />
               <img
-                src="https://reporanker.com/peerlist-badge.svg"
+                src="https://smollist.com/smollist/images/badges/featured-on-dark.svg"
                 alt="Featured on RepoRanker"
                 className="landing-badge-img landing-badge-img--dark"
               />
