@@ -113,6 +113,18 @@ async function signUpWithPassword(email: string, password: string, fullName: str
   });
 }
 
+async function sendPasswordResetEmail(email: string) {
+  return authRequest('/auth/v1/recover', {
+    method: 'POST',
+    body: JSON.stringify({
+      email,
+      options: {
+        redirectTo: getAuthRedirectUrl(),
+      },
+    }),
+  });
+}
+
 async function refreshAuthSession(refreshToken: string) {
   return authRequest<Partial<SupabaseSession>>('/auth/v1/token?grant_type=refresh_token', {
     method: 'POST',
@@ -368,6 +380,14 @@ export function useAuth() {
     setError(null);
   }, [commitSession]);
 
+  const resetPassword = useCallback(async (email: string) => {
+    if (!isSupabaseConfigured) {
+      throw new Error(supabaseConfigError);
+    }
+
+    await sendPasswordResetEmail(email);
+  }, []);
+
   const signOut = useCallback(async () => {
     if (!session) {
       commitSession(null);
@@ -393,6 +413,7 @@ export function useAuth() {
     isAdmin: profile?.role === 'admin',
     signIn,
     signUp,
+    resetPassword,
     signOut,
     refreshProfile,
     clearError: () => setError(null),

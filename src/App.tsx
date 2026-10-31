@@ -144,6 +144,7 @@ export default function App() {
             configError={auth.error === supabaseConfigError ? auth.error : null}
             onSignIn={auth.signIn}
             onSignUp={auth.signUp}
+            onResetPassword={auth.resetPassword}
           />
         ) : (
           <LandingPage onGetStarted={openAuth} />
