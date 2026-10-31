@@ -120,6 +120,23 @@ async function refreshAuthSession(refreshToken: string) {
   });
 }
 
+async function requestPasswordRecovery(email: string) {
+  return authRequest<{ message?: string }>('/auth/v1/recover', {
+    method: 'POST',
+    body: JSON.stringify({
+      email,
+      redirectTo: getAuthRedirectUrl(),
+    }),
+  });
+}
+
+async function updateUserPassword(accessToken: string, password: string) {
+  return authRequest<SupabaseAuthUser>('/auth/v1/user', {
+    method: 'PUT',
+    body: JSON.stringify({ password }),
+  }, accessToken);
+}
+
 async function getCurrentUser(accessToken: string) {
   return authRequest<SupabaseAuthUser>('/auth/v1/user', { method: 'GET' }, accessToken);
 }
@@ -235,6 +252,7 @@ export function useAuth() {
   const [session, setSession] = useState<SupabaseSession | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(isSupabaseConfigured);
+  const [isRecoveryMode, setIsRecoveryMode] = useState(false);
   const [error, setError] = useState<string | null>(isSupabaseConfigured ? null : supabaseConfigError);
 
   const commitSession = useCallback((nextSession: SupabaseSession | null) => {
@@ -258,6 +276,47 @@ export function useAuth() {
     let mounted = true;
 
     const bootstrap = async () => {
+      // Check if URL hash has Supabase recovery tokens: #access_token=...&type=recovery
+      if (typeof window !== 'undefined' && window.location.hash) {
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+        const hashAccessToken = hashParams.get('access_token');
+        const hashRefreshToken = hashParams.get('refresh_token');
+        const hashType = hashParams.get('type');
+        const expiresIn = Number(hashParams.get('expires_in')) || 3600;
+
+        if (hashAccessToken) {
+          try {
+            const user = await getCurrentUser(hashAccessToken);
+            if (!mounted) return;
+
+            const nextSession: SupabaseSession = {
+              access_token: hashAccessToken,
+              refresh_token: hashRefreshToken ?? '',
+              expires_in: expiresIn,
+              expires_at: Math.floor(Date.now() / 1000) + expiresIn,
+              token_type: 'bearer',
+              user,
+            };
+
+            commitSession(nextSession);
+            const nextProfile = await syncProfile(nextSession.access_token, user);
+            if (mounted) {
+              setProfile(nextProfile);
+              if (hashType === 'recovery') {
+                setIsRecoveryMode(true);
+              }
+              setError(null);
+              // Clean the hash from the browser URL without reload
+              window.history.replaceState(null, '', window.location.pathname + window.location.search);
+              setLoading(false);
+              return;
+            }
+          } catch {
+            // Fall back to standard session check
+          }
+        }
+      }
+
       const stored = readStoredSession(SESSION_KEY);
       if (!stored) {
         if (mounted) {
@@ -384,16 +443,37 @@ export function useAuth() {
     setError(null);
   }, [commitSession, session]);
 
+  const resetPassword = useCallback(async (email: string) => {
+    if (!isSupabaseConfigured) {
+      throw new Error(supabaseConfigError);
+    }
+    await requestPasswordRecovery(email);
+  }, []);
+
+  const updatePassword = useCallback(async (password: string) => {
+    if (!isSupabaseConfigured) {
+      throw new Error(supabaseConfigError);
+    }
+    if (!session?.access_token) {
+      throw new Error('You must follow a valid password reset link to update your password.');
+    }
+    await updateUserPassword(session.access_token, password);
+    setIsRecoveryMode(false);
+  }, [session]);
+
   return {
     session,
     user: session?.user ?? null,
     profile,
     loading,
     error,
+    isRecoveryMode,
     isAdmin: profile?.role === 'admin',
     signIn,
     signUp,
     signOut,
+    resetPassword,
+    updatePassword,
     refreshProfile,
     clearError: () => setError(null),
   };

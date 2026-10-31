@@ -144,10 +144,37 @@ export default function App() {
             configError={auth.error === supabaseConfigError ? auth.error : null}
             onSignIn={auth.signIn}
             onSignUp={auth.signUp}
+            onResetPassword={auth.resetPassword}
+            onUpdatePassword={auth.updatePassword}
           />
         ) : (
           <LandingPage onGetStarted={openAuth} />
         )}
+        <Analytics />
+      </Suspense>
+    );
+  }
+
+  if (auth.isRecoveryMode) {
+    return (
+      <Suspense fallback={
+        <main className="screen-shell screen-shell--loading">
+          <div className="loading-card">
+            <div className="loading-orb" aria-hidden="true" />
+            <p>Loading...</p>
+          </div>
+        </main>
+      }>
+        <AuthScreen
+          loading={auth.loading}
+          error={auth.error}
+          configError={auth.error === supabaseConfigError ? auth.error : null}
+          isRecoveryMode={true}
+          onSignIn={auth.signIn}
+          onSignUp={auth.signUp}
+          onResetPassword={auth.resetPassword}
+          onUpdatePassword={auth.updatePassword}
+        />
         <Analytics />
       </Suspense>
     );
