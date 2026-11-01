@@ -29,8 +29,29 @@ export interface Session {
 
 const STORAGE_KEY = 'cyber-ai-v2';
 const THEME_KEY = 'cyber-ai-theme';
+const CUSTOM_PROMPT_KEY = 'cyber-ai-custom-prompt';
 
 // ── Persistence helpers ───────────────────────────────────────────────────────
+
+function loadCustomPrompt(storageKey: string): string {
+  try {
+    return localStorage.getItem(storageKey) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function saveCustomPrompt(storageKey: string, prompt: string): void {
+  try {
+    if (prompt) {
+      localStorage.setItem(storageKey, prompt);
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+  } catch {
+    // Storage quota exceeded or disabled
+  }
+}
 
 function createSession(name = 'New Chat'): Session {
   const now = new Date().toISOString();
@@ -70,6 +91,7 @@ function computeMaxId(sessions: Session[]): number {
 
 export function useChat(storageScope = 'global', sessionToken?: string) {
   const storageKey = `${STORAGE_KEY}:${storageScope}`;
+  const customPromptStorageKey = `${CUSTOM_PROMPT_KEY}:${storageScope}`;
 
   // Lazily compute initial sessions + activeSessionId using useState initializer to avoid ref access during render
   const [initialData] = useState(() => {
@@ -88,6 +110,7 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
   const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState<ChatError | null>(null);
   const [theme, setTheme] = useState<'dark' | 'light'>(loadTheme);
+  const [customPrompt, setCustomPromptState] = useState<string>(() => loadCustomPrompt(customPromptStorageKey));
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -98,21 +121,30 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
   const messagesRef = useRef<Message[]>([]);
   const activeSessionIdRef = useRef(activeSessionId);
   const loadingRef = useRef(loading);
+  const customPromptRef = useRef(customPrompt);
   const storageScopeRef = useRef(storageScope);
   const storageKeyRef = useRef(storageKey);
+  const customPromptStorageKeyRef = useRef(customPromptStorageKey);
   const sessionTokenRef = useRef(sessionToken);
 
   // Keep refs synchronized in effects to guarantee callbacks have stable identities
   useEffect(() => { activeSessionIdRef.current = activeSessionId; }, [activeSessionId]);
   useEffect(() => { loadingRef.current = loading; }, [loading]);
+  useEffect(() => { customPromptRef.current = customPrompt; }, [customPrompt]);
   useEffect(() => { storageScopeRef.current = storageScope; }, [storageScope]);
   useEffect(() => { storageKeyRef.current = storageKey; }, [storageKey]);
+  useEffect(() => { customPromptStorageKeyRef.current = customPromptStorageKey; }, [customPromptStorageKey]);
   useEffect(() => { sessionTokenRef.current = sessionToken; }, [sessionToken]);
 
   // Persist sessions whenever they change
   useEffect(() => {
     saveSessions(storageKey, sessions);
   }, [sessions, storageKey]);
+
+  // Persist custom prompt whenever it changes
+  useEffect(() => {
+    saveCustomPrompt(customPromptStorageKey, customPrompt);
+  }, [customPrompt, customPromptStorageKey]);
 
   // Apply theme to <html> element
   useEffect(() => {
@@ -351,8 +383,9 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
 
     // Build API messages from updated session (read from ref for stable callback identity)
     const history = [...messagesRef.current, userMsg];
+    const effectiveSystemPrompt = customPromptRef.current.trim() || SYSTEM_PROMPT;
     const apiMessages: ChatMessage[] = [
-      { role: 'system', content: SYSTEM_PROMPT },
+      { role: 'system', content: effectiveSystemPrompt },
       ...history.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
     ];
 
@@ -455,16 +488,27 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     setTheme(t => t === 'dark' ? 'light' : 'dark');
   }, []);
 
+  const setCustomPrompt = useCallback((prompt: string) => {
+    setCustomPromptState(prompt);
+  }, []);
+
+  const resetCustomPrompt = useCallback(() => {
+    setCustomPromptState('');
+  }, []);
+
   const clearAllData = useCallback(() => {
     const scope = storageScopeRef.current;
     const key = storageKeyRef.current;
     localStorage.removeItem(key);
     localStorage.removeItem(`${STORAGE_KEY}:${scope === 'global' ? 'user' : 'global'}`);
+    localStorage.removeItem(customPromptStorageKeyRef.current);
+    localStorage.removeItem(`${CUSTOM_PROMPT_KEY}:${scope === 'global' ? 'user' : 'global'}`);
     localStorage.removeItem(THEME_KEY);
     localStorage.removeItem('cyber-ai-welcome-seen');
     const fresh = createSession();
     setSessions([fresh]);
     setActiveSessionId(fresh.id);
+    setCustomPromptState('');
     setLoading(false);
     setStreamingContent('');
     setError(null);
@@ -524,6 +568,7 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     streamingContent,
     error,
     theme,
+    customPrompt,
     searchQuery,
     searchOpen,
     sidebarOpen,
@@ -538,6 +583,9 @@ export function useChat(storageScope = 'global', sessionToken?: string) {
     stopGenerating,
     regenerate,
     setFeedback,
+    // Custom prompt actions
+    setCustomPrompt,
+    resetCustomPrompt,
     // UI actions
     toggleTheme,
     clearAllData,

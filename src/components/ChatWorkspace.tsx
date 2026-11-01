@@ -5,6 +5,7 @@ import { WelcomeScreen } from './WelcomeScreen.tsx';
 import { MessageList } from './MessageList.tsx';
 import { InputBar } from './InputBar.tsx';
 import { MessageSearch } from './MessageSearch.tsx';
+import { CustomPromptModal } from './CustomPromptModal.tsx';
 import { useChat } from '../hooks/useChat.ts';
 
 interface ChatWorkspaceProps {
@@ -19,15 +20,19 @@ interface ChatWorkspaceProps {
 export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpenAdmin, onSignOut }: ChatWorkspaceProps) {
   const chat = useChat(userId, sessionToken ?? undefined);
   const [input, setInput] = useState('');
+  const [customPromptOpen, setCustomPromptOpen] = useState(false);
 
   const {
     messages,
+    customPrompt,
     searchOpen,
     toggleSearch,
     newSession,
     toggleTheme,
     sendMessage,
     setSidebarOpen,
+    setCustomPrompt,
+    resetCustomPrompt,
     setError,
     clearAllData
   } = chat;
@@ -108,6 +113,14 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
     onSignOut();
   }, [clearAllData, onSignOut]);
 
+  const handleOpenCustomPrompt = useCallback(() => {
+    setCustomPromptOpen(true);
+  }, []);
+
+  const handleCloseCustomPrompt = useCallback(() => {
+    setCustomPromptOpen(false);
+  }, []);
+
   const searchMatchCount = useMemo(() => {
     const query = chat.searchQuery.trim().toLowerCase();
     if (!query) return 0;
@@ -141,10 +154,12 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
           sessions={chat.sessions}
           activeSessionId={chat.activeSessionId}
           open={chat.sidebarOpen}
+          hasCustomPrompt={Boolean(customPrompt.trim())}
           onNew={chat.newSession}
           onSwitch={chat.switchSession}
           onDelete={chat.deleteSession}
           onClose={handleCloseSidebar}
+          onOpenCustomPrompt={handleOpenCustomPrompt}
           userLabel={userLabel}
           isAdmin={isAdmin}
           onOpenAdmin={onOpenAdmin}
@@ -184,6 +199,14 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
           />
         </div>
       </div>
+
+      <CustomPromptModal
+        isOpen={customPromptOpen}
+        currentPrompt={customPrompt}
+        onSave={setCustomPrompt}
+        onReset={resetCustomPrompt}
+        onClose={handleCloseCustomPrompt}
+      />
     </div>
   );
 }

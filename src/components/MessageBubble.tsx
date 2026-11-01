@@ -5,7 +5,7 @@ import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark, oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Components } from 'react-markdown';
 import type { Message } from '../hooks/useChat.ts';
-import { FaRobot } from 'react-icons/fa';
+import { FaRobot, FaUser } from 'react-icons/fa';
 import { FiCopy, FiThumbsUp, FiThumbsDown, FiRefreshCw } from 'react-icons/fi';
 
 // Register only the languages needed for a cybersecurity context.
@@ -232,7 +232,7 @@ function MessageBubbleInner({ message, isLast, theme, onFeedback, onRegenerate }
   return (
     <div className={`message ${isUser ? 'user' : 'ai'}`}>
       <div className={`avatar ${isUser ? 'user' : 'ai'}`} aria-label={isUser ? 'You' : 'Cyber AI'}>
-        {isUser ? '👤' : '🤖'}
+        {isUser ? <FaUser size={16} /> : <FaRobot size={18} />}
       </div>
 
       <div className="message-body">

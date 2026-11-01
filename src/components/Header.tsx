@@ -44,7 +44,6 @@ export const Header = memo(function Header({
       </div>
 
       <div className="header-actions">
-
         {hasMessages && (
           <>
             <button
