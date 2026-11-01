@@ -134,10 +134,8 @@ export function ChatWorkspace({ userId, sessionToken, userLabel, isAdmin, onOpen
         loading={chat.loading}
         hasMessages={chat.messages.length > 0}
         sidebarOpen={chat.sidebarOpen}
-        hasCustomPrompt={Boolean(customPrompt.trim())}
         onToggleSearch={chat.toggleSearch}
         onToggleSidebar={chat.toggleSidebar}
-        onOpenCustomPrompt={handleOpenCustomPrompt}
         onExport={chat.exportMarkdown}
         onClear={chat.clearMessages}
       />
