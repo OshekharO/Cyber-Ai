@@ -26,9 +26,12 @@ interface AuthUserItem {
 function buildUrl(path: string, query?: Record<string, string | number | undefined>) {
   const url = new URL(`${supabaseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`);
   if (query) {
-    for (const [key, value] of Object.entries(query)) {
-      if (value !== undefined) {
-        url.searchParams.set(key, String(value));
+    for (const key in query) {
+      if (Object.prototype.hasOwnProperty.call(query, key)) {
+        const value = query[key];
+        if (value !== undefined) {
+          url.searchParams.set(key, String(value));
+        }
       }
     }
   }
@@ -105,33 +108,48 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       : req.body ?? {}) as Record<string, unknown>;
 
     if (req.method === 'GET') {
-      const allAuthUsers: AuthUserItem[] = [];
-      let pageNum = 1;
+      const rawPage = Array.isArray(req.query?.page) ? req.query?.page[0] : req.query?.page;
+      const rawPerPage = Array.isArray(req.query?.perPage) ? req.query?.perPage[0] : req.query?.perPage;
+      const isPaginated = rawPage !== undefined || rawPerPage !== undefined;
 
-      while (true) {
-        const listResponse = await supabaseRequest(`/auth/v1/admin/users?per_page=1000&page=${pageNum}`, { method: 'GET' }, supabaseServiceRoleKey);
+      let users: AuthUserItem[] = [];
+
+      if (isPaginated) {
+        const page = Math.max(Number(rawPage ?? 1) || 1, 1);
+        const perPage = Math.min(Math.max(Number(rawPerPage ?? 100) || 100, 1), 200);
+
+        const listResponse = await supabaseRequest(
+          `/auth/v1/admin/users?page=${page}&per_page=${perPage}`,
+          { method: 'GET' },
+          supabaseServiceRoleKey,
+        );
         if (!listResponse.ok) {
           throw new Error(`Failed to load users (${listResponse.status}).`);
         }
 
         const listPayload = await listResponse.json() as { users?: AuthUserItem[] };
-        const fetchedUsers = listPayload.users ?? [];
-        allAuthUsers.push(...fetchedUsers);
+        users = listPayload.users ?? [];
+      } else {
+        let pageNum = 1;
+        while (true) {
+          const listResponse = await supabaseRequest(
+            `/auth/v1/admin/users?per_page=1000&page=${pageNum}`,
+            { method: 'GET' },
+            supabaseServiceRoleKey,
+          );
+          if (!listResponse.ok) {
+            throw new Error(`Failed to load users (${listResponse.status}).`);
+          }
 
-        if (fetchedUsers.length < 1000) {
-          break;
+          const listPayload = await listResponse.json() as { users?: AuthUserItem[] };
+          const fetchedUsers = listPayload.users ?? [];
+          users.push(...fetchedUsers);
+
+          if (fetchedUsers.length < 1000) {
+            break;
+          }
+          pageNum++;
         }
-        pageNum++;
-      }
-
-      const rawPage = Array.isArray(req.query?.page) ? req.query?.page[0] : req.query?.page;
-      const rawPerPage = Array.isArray(req.query?.perPage) ? req.query?.perPage[0] : req.query?.perPage;
-
-      let users = allAuthUsers;
-      if (rawPage !== undefined || rawPerPage !== undefined) {
-        const page = Math.max(Number(rawPage ?? 1) || 1, 1);
-        const perPage = Math.min(Math.max(Number(rawPerPage ?? 100) || 100, 1), 200);
-        users = users.slice((page - 1) * perPage, page * perPage);
       }
 
       const ids = users.map((userItem) => userItem.id);
