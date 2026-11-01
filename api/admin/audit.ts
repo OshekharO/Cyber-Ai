@@ -108,12 +108,16 @@ export default async function handler(req: { method: string; query?: Record<stri
 
     const rows = await listResponse.json() as AuditLogRow[];
 
-    const adminIds = Array.from(new Set(rows.map((row) => row.admin_id).filter(Boolean)));
-    const targetIds = Array.from(new Set(rows.map((row) => row.target_user_id).filter(Boolean)));
-    const allIds = [...adminIds, ...targetIds];
+    const idSet = new Set<string>();
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      if (row.admin_id) idSet.add(row.admin_id);
+      if (row.target_user_id) idSet.add(row.target_user_id);
+    }
 
     const profilesMap = new Map<string, { email: string | null; full_name: string | null }>();
-    if (allIds.length > 0) {
+    if (idSet.size > 0) {
+      const allIds = Array.from(idSet);
       const profilesResponse = await supabaseRequest(
         `/rest/v1/profiles?select=id,email,full_name&id=in.(${allIds.join(',')})`,
         { method: 'GET' },
