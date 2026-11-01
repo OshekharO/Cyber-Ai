@@ -1,13 +1,15 @@
 import { memo } from 'react';
-import { FiMenu, FiShield, FiSearch, FiDownload, FiTrash2 } from 'react-icons/fi';
+import { FiMenu, FiShield, FiSearch, FiDownload, FiTrash2, FiSliders } from 'react-icons/fi';
 
 interface HeaderProps {
   searchOpen: boolean;
   loading: boolean;
   hasMessages: boolean;
   sidebarOpen: boolean;
+  hasCustomPrompt?: boolean;
   onToggleSearch: () => void;
   onToggleSidebar: () => void;
+  onOpenCustomPrompt: () => void;
   onExport: () => void;
   onClear: () => void;
 }
@@ -18,8 +20,10 @@ export const Header = memo(function Header({
   loading,
   hasMessages,
   sidebarOpen,
+  hasCustomPrompt,
   onToggleSearch,
   onToggleSidebar,
+  onOpenCustomPrompt,
   onExport,
   onClear,
 }: HeaderProps) {
@@ -44,6 +48,15 @@ export const Header = memo(function Header({
       </div>
 
       <div className="header-actions">
+        <button
+          className={`header-icon-btn${hasCustomPrompt ? ' active' : ''}`}
+          onClick={onOpenCustomPrompt}
+          aria-label="Custom Prompt / System Instructions"
+          title={hasCustomPrompt ? 'Custom Prompt (Active)' : 'Custom System Prompt'}
+        >
+          <FiSliders size={18} />
+          {hasCustomPrompt && <span className="header-badge-dot" aria-hidden="true" />}
+        </button>
 
         {hasMessages && (
           <>

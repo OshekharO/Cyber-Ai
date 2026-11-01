@@ -1,15 +1,17 @@
 import { useState, useEffect, memo } from 'react';
-import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings, FiSun, FiMoon, FiDatabase, FiEdit2 } from 'react-icons/fi';
+import { FiMessageSquare, FiPlus, FiX, FiTrash2, FiLogOut, FiUser, FiSettings, FiSun, FiMoon, FiDatabase, FiEdit2, FiSliders } from 'react-icons/fi';
 import type { Session } from '../hooks/useChat.ts';
 
 interface SidebarProps {
   sessions: Session[];
   activeSessionId: string;
   open: boolean;
+  hasCustomPrompt?: boolean;
   onNew: () => void;
   onSwitch: (id: string) => void;
   onDelete: (id: string) => void;
   onClose: () => void;
+  onOpenCustomPrompt?: () => void;
   userLabel?: string;
   isAdmin?: boolean;
   onOpenAdmin?: () => void;
@@ -26,10 +28,12 @@ export const Sidebar = memo(function Sidebar({
   sessions, 
   activeSessionId, 
   open, 
+  hasCustomPrompt,
   onNew, 
   onSwitch, 
   onDelete, 
   onClose,
+  onOpenCustomPrompt,
   userLabel,
   isAdmin,
   onOpenAdmin,
@@ -238,6 +242,18 @@ export const Sidebar = memo(function Sidebar({
               </div>
             )}
             <div className="profile-menu-divider" />
+            {onOpenCustomPrompt && (
+              <button
+                className="profile-menu-item"
+                onClick={() => {
+                  onOpenCustomPrompt();
+                  setShowProfileMenu(false);
+                }}
+              >
+                <FiSliders size={18} />
+                <span>Custom System Prompt {hasCustomPrompt ? '(Active)' : ''}</span>
+              </button>
+            )}
             {onToggleTheme && theme && (
               <button className="profile-menu-item" onClick={() => { onToggleTheme(); setShowProfileMenu(false); }}>
                 {theme === 'dark' ? <FiSun size={18} /> : <FiMoon size={18} />}
