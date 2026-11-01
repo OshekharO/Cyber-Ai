@@ -15,6 +15,54 @@ interface CveResponse {
   error?: string;
 }
 
+interface CacheEntry {
+  value: string;
+  expiresAt: number;
+}
+
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const MAX_CACHE_SIZE = 100;
+
+// In-memory LRU Map cache for CVE lookup results
+const cveCache = new Map<string, CacheEntry>();
+
+function getCachedResult(key: string): string | null {
+  const entry = cveCache.get(key);
+  if (!entry) {
+    return null;
+  }
+
+  if (Date.now() > entry.expiresAt) {
+    cveCache.delete(key);
+    return null;
+  }
+
+  // Refresh LRU order by deleting and re-setting
+  cveCache.delete(key);
+  cveCache.set(key, entry);
+  return entry.value;
+}
+
+function setCachedResult(key: string, value: string): void {
+  // If already at capacity, delete oldest item (first key in Map insertion order)
+  if (cveCache.size >= MAX_CACHE_SIZE && !cveCache.has(key)) {
+    const oldestKey = cveCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      cveCache.delete(oldestKey);
+    }
+  }
+
+  cveCache.set(key, {
+    value,
+    expiresAt: Date.now() + CACHE_TTL_MS,
+  });
+}
+
+/** Clear cache - helpful for testing */
+export function clearCveCache(): void {
+  cveCache.clear();
+}
+
 export async function lookupCve(target: string): Promise<string> {
   const rawInput = target.trim();
   if (!rawInput) {
@@ -29,6 +77,11 @@ export async function lookupCve(target: string): Promise<string> {
   const cveRegex = /^CVE-\d{4}-\d{4,7}$/;
   if (!cveRegex.test(cveId)) {
     return `❌ **Invalid CVE ID format:** \`${rawInput}\`. Expected format: \`CVE-YYYY-NNNN\` (e.g., \`CVE-2024-3094\`).`;
+  }
+
+  const cached = getCachedResult(cveId);
+  if (cached) {
+    return cached;
   }
 
   const targetUrl = `https://tridentstack.com/api/v1/cve/${encodeURIComponent(cveId)}`;
@@ -75,7 +128,9 @@ export async function lookupCve(target: string): Promise<string> {
       output += `| **Vector** | \`${data.cvss.vector ?? 'N/A'}\` |\n\n`;
     }
 
-    return output.trimEnd();
+    const result = output.trimEnd();
+    setCachedResult(cveId, result);
+    return result;
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : 'Failed to fetch CVE details';
     return `❌ **Error looking up CVE:** ${errorMsg}`;
